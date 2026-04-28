@@ -775,11 +775,14 @@
     <div class="login-logo">intra<span>.</span>net</div>
     <div class="login-sub">PORTAL CORPORATIVO INTERNO</div>
     <label class="login-label">Usuario</label>
-    <input class="login-input" type="text" id="login-user" placeholder="Tu nombre de usuario" autocomplete="username">
+    <input class="login-input" type="text" id="login-user" placeholder="Usuario" autocomplete="username">
     <label class="login-label">Contraseña</label>
-    <input class="login-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    <div style="position:relative;">
+      <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password" style="padding-right:48px;margin-bottom:20px;">
+      <button type="button" onclick="togglePass()" id="toggle-pass-btn" style="position:absolute;right:14px;top:13px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);font-size:16px;">👁</button>
+    </div>
     <button class="login-btn" onclick="doLogin()">Ingresar al portal</button>
-    <div class="login-error" id="login-error">Usuario o contraseña incorrectos. Intenta con "admin" / "1234"</div>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos.</div>
   </div>
 </div>
 
@@ -790,10 +793,10 @@
     <div class="nav-logo">intra<span>.</span>net</div>
     <div class="nav-links">
       <a class="nav-link active" onclick="showPage('home')">Inicio</a>
-      <a class="nav-link" onclick="openDrive('wholesale')">Wholesale</a>
-      <a class="nav-link" onclick="openDrive('finanzas')">Finanzas</a>
-      <a class="nav-link" onclick="openDrive('operaciones')">Operaciones</a>
-      <a class="nav-link" onclick="openDrive('marketing')">Marketing</a>
+      <a class="nav-link" onclick="openDrive('wholesale')" data-dep="wholesale">Wholesale</a>
+      <a class="nav-link" onclick="openDrive('finanzas')" data-dep="finanzas">Finanzas</a>
+      <a class="nav-link" onclick="openDrive('operaciones')" data-dep="operaciones">Operaciones</a>
+      <a class="nav-link" onclick="openDrive('marketing')" data-dep="marketing">Marketing</a>
     </div>
     <div class="nav-right">
       <div class="nav-user">
@@ -820,10 +823,10 @@
       <!-- DEPT BAR -->
       <div class="dept-bar">
         <span class="dept-bar-title">Áreas</span>
-        <a class="dept-btn" onclick="openDrive('wholesale')"><span class="dept-icon">🛒</span> Wholesale</a>
-        <a class="dept-btn" onclick="openDrive('finanzas')"><span class="dept-icon">💰</span> Finanzas</a>
-        <a class="dept-btn" onclick="openDrive('operaciones')"><span class="dept-icon">⚙️</span> Operaciones</a>
-        <a class="dept-btn" onclick="openDrive('marketing')"><span class="dept-icon">📣</span> Marketing</a>
+        <a class="dept-btn" onclick="openDrive('wholesale')" data-dep="wholesale"><span class="dept-icon">🛒</span> Wholesale</a>
+        <a class="dept-btn" onclick="openDrive('finanzas')" data-dep="finanzas"><span class="dept-icon">💰</span> Finanzas</a>
+        <a class="dept-btn" onclick="openDrive('operaciones')" data-dep="operaciones"><span class="dept-icon">⚙️</span> Operaciones</a>
+        <a class="dept-btn" onclick="openDrive('marketing')" data-dep="marketing"><span class="dept-icon">📣</span> Marketing</a>
       </div>
 
       <!-- 3-COL GRID -->
@@ -1009,7 +1012,22 @@
 
 <script>
 // ═══════════════ STATE ═══════════════
-const USERS = { admin: '1234', usuario: 'pass123', demo: 'demo' };
+const USERS = {
+  'teresita':  { pass: 'Tere2024',   name: 'Teresita',   deps: ['wholesale','finanzas','operaciones','marketing'] },
+  'valeria':   { pass: 'Vale2024',   name: 'Valeria',    deps: ['wholesale','finanzas','operaciones','marketing'] },
+  'luis':      { pass: 'Luis2024',   name: 'Luis',       deps: ['wholesale','finanzas'] },
+  'carlos':    { pass: 'Carl2024',   name: 'Carlos',     deps: ['wholesale','marketing'] },
+  'veronica':  { pass: 'Vero2024',   name: 'Veronica',   deps: ['operaciones'] },
+  'valentina': { pass: 'Valen2024',  name: 'Valentina',  deps: [] },
+  'sandra':    { pass: 'Sand2024',   name: 'Sandra',     deps: [] },
+  'margarita': { pass: 'Marga2024',  name: 'Margarita',  deps: ['wholesale','marketing'] },
+  'sofia':     { pass: 'Sofi2024',   name: 'Sofia',      deps: ['wholesale','marketing'] },
+  'juan':      { pass: 'Juan2024',   name: 'Juan',       deps: ['marketing'] },
+  'jano':      { pass: 'Jano2024',   name: 'Jano',       deps: ['marketing'] },
+  'josepedro': { pass: 'JoseP2024',  name: 'Jose Pedro', deps: ['wholesale'] },
+  'williams':  { pass: 'Will2024',   name: 'Williams',   deps: ['operaciones'] },
+  'claudio':   { pass: 'Clau2024',   name: 'Claudio',    deps: ['finanzas'] }
+};
 let currentUser = '';
 let calMonth, calYear;
 let events = JSON.parse(localStorage.getItem('intra_events') || '[]');
@@ -1031,23 +1049,54 @@ const DRIVE_GASTOS = 'https://drive.google.com/drive/folders/1VV5hPCXAN_CY0KyCV2
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHbeTbAybVCzV32cwte0EpF9nuc6frIkwMTZ4b_wuGhb_NUmdrGMVKaJgJ8Da0P-O4/exec';
 
 // ═══════════════ LOGIN ═══════════════
+function togglePass() {
+  var input = document.getElementById('login-pass');
+  var btn = document.getElementById('toggle-pass-btn');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+
+
 function doLogin() {
   const u = document.getElementById('login-user').value.trim().toLowerCase();
   const p = document.getElementById('login-pass').value;
-  if (USERS[u] && USERS[u] === p) {
+  const user = USERS[u];
+  if (user && user.pass === p) {
     currentUser = u;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    const name = u.charAt(0).toUpperCase() + u.slice(1);
+    const name = user.name || (u.charAt(0).toUpperCase() + u.slice(1));
     document.getElementById('greet-name').textContent = name;
     document.getElementById('nav-username').textContent = name;
     document.getElementById('nav-avatar').textContent = name.substring(0,2).toUpperCase();
+    // Apply department permissions
+    applyPermissions(user.deps);
     initApp();
   } else {
     const err = document.getElementById('login-error');
+    document.getElementById('login-error').textContent = 'Usuario o contraseña incorrectos.';
     err.style.display = 'block';
     setTimeout(()=> err.style.display='none', 4000);
   }
+}
+
+function applyPermissions(deps) {
+  const all = ['wholesale','finanzas','operaciones','marketing'];
+  all.forEach(function(dep) {
+    const hasAccess = deps.indexOf(dep) !== -1;
+    // Nav links
+    const navLink = document.querySelector('.nav-link[data-dep="' + dep + '"]');
+    if (navLink) navLink.style.display = hasAccess ? '' : 'none';
+    // Dept buttons on home
+    const deptBtn = document.querySelector('.dept-btn[data-dep="' + dep + '"]');
+    if (deptBtn) deptBtn.style.display = hasAccess ? '' : 'none';
+  });
 }
 document.getElementById('login-pass').addEventListener('keypress', e => { if(e.key==='Enter') doLogin(); });
 document.getElementById('login-user').addEventListener('keypress', e => { if(e.key==='Enter') document.getElementById('login-pass').focus(); });
