@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Finanzas NBHD 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+.topbar{background:#1a1a2e;padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:12px}
+.topbar-logo{color:#fff;font-size:15px;font-weight:700;white-space:nowrap}
+.topbar-logo span{color:#e63946}
+.topbar-right{display:flex;gap:8px;flex-shrink:0}
+.btn-sm{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);border:none;border-radius:7px;padding:7px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.btn-blue{background:#457b9d}
+.main{padding:20px;max-width:1360px;margin:0 auto}
+.section-title{font-size:13px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.8px;margin:22px 0 12px}
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:6px}
+.kpi{background:#fff;border-radius:11px;padding:16px 18px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.kpi-lbl{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.kpi-val{font-size:24px;font-weight:800;color:#1a1a2e;letter-spacing:-1px;line-height:1}
+.kpi-val.neg{color:#991b1b}
+.kpi-sub{font-size:11px;color:#aaa;margin-top:4px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-top:5px}
+.badge.up{background:#dcfce7;color:#166534}
+.badge.down{background:#fee2e2;color:#991b1b}
+.badge.neu{background:#f0f0f0;color:#555}
+/* CHARTS */
+.charts2{display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-bottom:14px}
+.chart-card{background:#fff;border-radius:11px;padding:18px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.chart-lbl{font-size:13.5px;font-weight:700;margin-bottom:2px}
+.chart-sub{font-size:11px;color:#aaa;margin-bottom:14px}
+/* EERR */
+.eerr-wrap{background:#fff;border-radius:11px;padding:20px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 6px rgba(0,0,0,.05);margin-bottom:14px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;padding:7px 12px;border-bottom:2px solid #f0f0f0;text-align:right}
+thead th:first-child{text-align:left}
+tbody tr{border-bottom:1px solid #f5f5f5}
+tbody tr:hover{background:#fafafa}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:9px 12px}
+td.nr{text-align:right;font-feature-settings:"tnum"}
+/* 2-col tables */
+.tables2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.tcard{background:#fff;border-radius:11px;padding:18px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 6px rgba(0,0,0,.05);overflow-x:auto}
+.tcard-lbl{font-size:13.5px;font-weight:700;margin-bottom:2px}
+.tcard-sub{font-size:11px;color:#aaa;margin-bottom:14px}
+.drive-link{background:linear-gradient(135deg,#1a1a2e,#2d3a5a);border-radius:11px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.drive-link-text h3{color:#fff;font-size:15px;font-weight:700;margin-bottom:3px}
+.drive-link-text p{color:rgba(255,255,255,.5);font-size:12px}
+@media(max-width:900px){
+  .kpis{grid-template-columns:1fr 1fr}
+  .charts2,.tables2{grid-template-columns:1fr}
+}
+@media(max-width:500px){
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi-val{font-size:19px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">NBHD <span>·</span> Dashboard Finanzas 2026</div>
+  <div class="topbar-right">
+    <a href="https://drive.google.com/drive/folders/1-COoCu54kIMru4lehm1cpL29gsivSaGc?usp=drive_link" target="_blank" class="btn-sm btn-blue">&#128193; Drive Finanzas</a>
+    <button class="btn-sm" onclick="history.back()">&#8592; Volver</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="section-title">KPIs · Q1 2026 (Enero – Marzo)</div>
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-lbl">Ventas Brutas Q1</div>
+      <div class="kpi-val">$1.6B</div>
+      <div class="kpi-sub">Acumulado Ene–Mar 2026</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Ventas Netas Q1</div>
+      <div class="kpi-val">$1.4B</div>
+      <div class="kpi-sub">Sin impuestos</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Margen Bruto Q1</div>
+      <div class="kpi-val">$599.4M</div>
+      <div class="kpi-sub"><span class="badge up">44.0% s/ventas netas</span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Result. Operacional Q1</div>
+      <div class="kpi-val ">$331.5M</div>
+      <div class="kpi-sub"><span class="badge up">Positivo ↑</span></div>
+    </div>
+  </div>
+
+  <div class="section-title">Resultados por Mes</div>
+  <div class="charts2">
+    <div class="chart-card">
+      <div class="chart-lbl">Ventas · Margen · Resultado Operacional</div>
+      <div class="chart-sub">En millones de pesos · Ene–Mar 2026</div>
+      <canvas id="c1" height="180"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-lbl">Mix Canal · Q1 2026</div>
+      <div class="chart-sub">Retail / Wholesale / No Nacionalizada</div>
+      <canvas id="c2" height="180"></canvas>
+    </div>
+  </div>
+
+  <div class="section-title">Estado de Resultados Consolidado</div>
+  <div class="eerr-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left">Indicador</th>
+          <th>ENERO</th><th>FEBRERO</th><th>MARZO</th><th>Q1 TOTAL</th>
+        </tr>
+      </thead>
+      <tbody><tr><td style="">Ventas Brutas</td><td class="nr" style="">$1.1B</td><td class="nr" style="">$171.6M</td><td class="nr" style="">$286.0M</td><td class="nr" style="">$1.6B</td></tr><tr><td style="">Ventas Netas</td><td class="nr" style="">$972.9M</td><td class="nr" style="">$148.0M</td><td class="nr" style="">$240.3M</td><td class="nr" style="">$1.4B</td></tr><tr><td style="">Costo Mercaderías</td><td class="nr" style="">$578.7M</td><td class="nr" style="">$96.8M</td><td class="nr" style="">$86.4M</td><td class="nr" style="">$761.9M</td></tr><tr><td style="font-weight:700;background:#f8f8f8;">Margen Bruto</td><td class="nr" style="font-weight:700;background:#f8f8f8;">$394.2M</td><td class="nr" style="font-weight:700;background:#f8f8f8;">$51.3M</td><td class="nr" style="font-weight:700;background:#f8f8f8;">$153.9M</td><td class="nr" style="font-weight:700;background:#f8f8f8;">$599.4M</td></tr><tr><td style="">Costo Empresa</td><td class="nr" style="">$57.0M</td><td class="nr" style="">$66.5M</td><td class="nr" style="">$55.4M</td><td class="nr" style="">$178.9M</td></tr><tr><td style="">Arriendo</td><td class="nr" style="">$24.4M</td><td class="nr" style="">$26.6M</td><td class="nr" style="">$28.7M</td><td class="nr" style="">$79.7M</td></tr><tr><td style="">Otros Gastos</td><td class="nr" style="">$3.5M</td><td class="nr" style="">$3.3M</td><td class="nr" style="">$2.5M</td><td class="nr" style="">$9.3M</td></tr><tr><td style="font-weight:700;background:#f8f8f8;">Result. Operacional</td><td class="nr" style="font-weight:700;color:#166534;background:#f8f8f8;">$309.3M</td><td class="nr" style="font-weight:700;color:#991b1b;background:#f8f8f8;">-$45.1M</td><td class="nr" style="font-weight:700;color:#166534;background:#f8f8f8;">$67.3M</td><td class="nr" style="font-weight:700;color:#166534;background:#f8f8f8;">$331.5M</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="section-title">Comparativo Canal · 2024 – 2025 – 2026</div>
+  <div class="chart-card" style="margin-bottom:14px">
+    <div class="chart-lbl">Ventas Netas por Canal</div>
+    <div class="chart-sub">Acumulado Q1 por año · En millones de pesos</div>
+    <canvas id="c3" height="100"></canvas>
+  </div>
+
+  <div class="section-title">Detalle por Sucursal y Comparativo NBHD</div>
+  <div class="tables2">
+    <div class="tcard">
+      <div class="tcard-lbl">Resultados por Sucursal · Q1 2026</div>
+      <div class="tcard-sub">Acumulado Ene–Mar · Todas las tiendas</div>
+      <table>
+        <thead><tr><th style="text-align:left">Sucursal</th><th>Ventas</th><th>Margen</th><th>Result. Op.</th><th>Mg%</th></tr></thead>
+        <tbody><tr><td>WHOLESALE</td><td class="nr">$551.9M</td><td class="nr">$185.5M</td><td class="nr" style="color:#166534;font-weight:700">$38.2M</td><td class="nr">33.6%</td></tr><tr><td>NO NACIONALIZADA</td><td class="nr">$342.2M</td><td class="nr">$152.1M</td><td class="nr" style="color:#166534;font-weight:700">$152.1M</td><td class="nr">44.4%</td></tr><tr><td>CASA COSTANERA</td><td class="nr">$205.1M</td><td class="nr">$67.1M</td><td class="nr" style="color:#166534;font-weight:700">$24.8M</td><td class="nr">32.7%</td></tr><tr><td>MARAIS ONLINE</td><td class="nr">$144.2M</td><td class="nr">$97.9M</td><td class="nr" style="color:#166534;font-weight:700">$97.9M</td><td class="nr">67.9%</td></tr><tr><td>VITACURA</td><td class="nr">$136.5M</td><td class="nr">$40.1M</td><td class="nr" style="color:#991b1b;font-weight:700">-$10.1M</td><td class="nr">29.4%</td></tr><tr><td>PARQUE ARAUCO</td><td class="nr">$90.4M</td><td class="nr">$34.6M</td><td class="nr" style="color:#166534;font-weight:700">$6.5M</td><td class="nr">38.3%</td></tr><tr><td>NBHD ONLINE</td><td class="nr">$84.6M</td><td class="nr">$22.0M</td><td class="nr" style="color:#166534;font-weight:700">$22.0M</td><td class="nr">26.0%</td></tr></tbody>
+      </table>
+    </div>
+    <div class="tcard">
+      <div class="tcard-lbl">Comparativo NBHD · 2025 vs 2026</div>
+      <div class="tcard-sub">Acumulado Q1 por tienda</div>
+      <table>
+        <thead><tr><th style="text-align:left">Tienda</th><th>2025</th><th>2026</th><th>Var%</th></tr></thead>
+        <tbody><tr><td>Online NBHD</td><td class="nr">$25.7M</td><td class="nr">$87.3M</td><td class="nr" style="color:#166534;font-weight:700">↑ 239.7%</td></tr><tr><td>Online CC</td><td class="nr">$3.1M</td><td class="nr">$141.4M</td><td class="nr" style="color:#166534;font-weight:700">↑ 4487.8%</td></tr><tr><td>The Market</td><td class="nr">$27.6M</td><td class="nr">$4.3M</td><td class="nr" style="color:#991b1b;font-weight:700">↓ 84.5%</td></tr><tr><td>NBHD Vitacura</td><td class="nr">$130.3M</td><td class="nr">$115.1M</td><td class="nr" style="color:#991b1b;font-weight:700">↓ 11.7%</td></tr><tr><td>Parque Arauco</td><td class="nr">$120.3M</td><td class="nr">$89.2M</td><td class="nr" style="color:#991b1b;font-weight:700">↓ 25.8%</td></tr><tr><td>Casa Costanera</td><td class="nr">$155.6M</td><td class="nr">$205.1M</td><td class="nr" style="color:#166534;font-weight:700">↑ 31.8%</td></tr><tr><td>NBHD</td><td class="nr">$64.1M</td><td class="nr">$18.5M</td><td class="nr" style="color:#991b1b;font-weight:700">↓ 71.1%</td></tr><tr style="font-weight:700;background:#f8f8f8"><td>TOTAL Q1</td><td class="nr">$526.8M</td><td class="nr">$660.9M</td><td class="nr" style="color:#166534">↑ 25.5%</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="drive-link">
+    <div class="drive-link-text">
+      <h3>&#128193; Carpeta Finanzas en Drive</h3>
+      <p>Accede a todos los reportes, planillas y documentos del área de Finanzas</p>
+    </div>
+    <a href="https://drive.google.com/drive/folders/1-COoCu54kIMru4lehm1cpL29gsivSaGc?usp=drive_link" target="_blank" class="btn-sm btn-blue" style="padding:10px 20px;font-size:13px">Ir a Drive →</a>
+  </div>
+
+</div>
+
+<script>
+Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+Chart.defaults.font.size = 12;
+
+new Chart(document.getElementById('c1'), {
+  type: 'bar',
+  data: {
+    labels: ["ENERO", "FEBRERO", "MARZO"],
+    datasets: [
+      {label:'Ventas Brutas', data:[1097.3, 171.6, 286.0], backgroundColor:'rgba(26,26,46,.75)', borderRadius:5},
+      {label:'Margen Bruto', data:[394.2, 51.3, 153.9], backgroundColor:'rgba(69,123,157,.8)', borderRadius:5},
+      {label:'Result. Op.', data:[309.3, -45.1, 67.3], backgroundColor:["rgba(34,197,94,.8)", "rgba(230,57,70,.8)", "rgba(34,197,94,.8)"], borderRadius:5}
+    ]
+  },
+  options:{responsive:true, plugins:{legend:{position:'bottom'}}, scales:{y:{ticks:{callback:v=>'$'+v+'M'}}}}
+});
+
+new Chart(document.getElementById('c2'), {
+  type: 'doughnut',
+  data: {
+    labels: ["Retail", "Wholesale", "No Nacional."],
+    datasets: [{
+      data: [555.2, 463.8, 342.2],
+      backgroundColor:['rgba(26,26,46,.85)','rgba(69,123,157,.85)','rgba(230,57,70,.8)'],
+      borderWidth:2, borderColor:'#fff'
+    }]
+  },
+  options:{responsive:true, plugins:{legend:{position:'bottom'}, tooltip:{callbacks:{label:ctx=>ctx.label+': $'+ctx.raw+'M'}}}}
+});
+
+new Chart(document.getElementById('c3'), {
+  type: 'bar',
+  data: {
+    labels: ["Retail", "Wholesale", "No Nacional."],
+    datasets: [
+      {label:'2024', data:[501.6, 494.5, 511.9], backgroundColor:'rgba(200,200,210,.7)', borderRadius:4},
+      {label:'2025', data:[417.2, 830.7, 280.9], backgroundColor:'rgba(69,123,157,.8)', borderRadius:4},
+      {label:'2026', data:[555.2, 463.8, 342.2], backgroundColor:'rgba(26,26,46,.85)', borderRadius:4}
+    ]
+  },
+  options:{responsive:true, plugins:{legend:{position:'bottom'}}, scales:{y:{ticks:{callback:v=>'$'+v+'M'}}}}
+});
+</script>
+</body>
+</html>
