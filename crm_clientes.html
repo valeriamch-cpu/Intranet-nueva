@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>CRM Clientes por Cobrar</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+:root{--primary:#1a1a2e;--accent:#e63946;--border:rgba(0,0,0,.08);--surface:#f0f2f5;--card:#fff;--radius:11px}
+
+/* TOPBAR */
+.topbar{background:var(--primary);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:12px}
+.topbar-logo{color:#fff;font-size:15px;font-weight:700}
+.topbar-logo span{color:#e63946}
+.topbar-right{display:flex;gap:8px;align-items:center}
+.btn-sm{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);border:none;border-radius:7px;padding:7px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:background .15s}
+.btn-sm:hover{background:rgba(255,255,255,.2)}
+.btn-blue{background:#457b9d !important}
+
+/* EMPRESA SELECTOR */
+#empresa-selector{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--primary);position:relative;overflow:hidden}
+#empresa-selector::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(230,57,70,.12) 0%,transparent 70%);top:-150px;right:-100px}
+.selector-card{position:relative;z-index:1;text-align:center;padding:20px}
+.selector-title{color:#fff;font-size:28px;font-weight:700;letter-spacing:-.8px;margin-bottom:8px}
+.selector-sub{color:rgba(255,255,255,.45);font-size:14px;margin-bottom:44px}
+.empresa-cards{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+.empresa-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:36px 44px;cursor:pointer;transition:all .2s;text-align:center;min-width:200px}
+.empresa-card:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);transform:translateY(-3px)}
+.empresa-card .emp-icon{font-size:40px;margin-bottom:14px}
+.empresa-card .emp-name{color:#fff;font-size:20px;font-weight:700;letter-spacing:-.3px}
+.empresa-card .emp-sub{color:rgba(255,255,255,.4);font-size:12px;margin-top:4px}
+
+/* MAIN APP */
+#app{display:none;flex-direction:column;min-height:100vh}
+
+/* EMPRESA TABS */
+.emp-tabs{background:var(--primary);padding:0 24px;display:flex;gap:4px;border-top:1px solid rgba(255,255,255,.08)}
+.emp-tab{padding:10px 20px;color:rgba(255,255,255,.5);font-size:13px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;transition:all .15s}
+.emp-tab.active{color:#fff;border-bottom-color:#e63946}
+
+/* CONTENT */
+.content{padding:22px;max-width:1360px;margin:0 auto;width:100%;flex:1}
+
+/* STATS BAR */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--card);border-radius:var(--radius);padding:14px 16px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.stat-lbl{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.stat-val{font-size:20px;font-weight:800;color:var(--primary);letter-spacing:-.8px}
+.stat-val.warn{color:#d97706}
+.stat-val.danger{color:#dc2626}
+.stat-val.ok{color:#16a34a}
+
+/* ACTION BAR */
+.action-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.btn-primary{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px;transition:opacity .15s}
+.btn-primary:hover{opacity:.87}
+.btn-accent{background:#e63946;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px}
+.btn-outline{background:none;color:#555;border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px;transition:all .15s}
+.btn-outline:hover{background:#f5f5f5}
+.search-input{flex:1;min-width:200px;border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13.5px;font-family:inherit;outline:none;background:#fff}
+.search-input:focus{border-color:#457b9d}
+.filter-select{border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;background:#fff;cursor:pointer}
+
+/* TABLE */
+.table-wrap{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.05);overflow:hidden}
+.table-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.table-title{font-size:14px;font-weight:700}
+.table-count{font-size:12px;color:#aaa}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;border-bottom:2px solid #f0f0f0;white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:#555}
+tbody tr{border-bottom:1px solid #f5f5f5;transition:background .1s;cursor:pointer}
+tbody tr:hover{background:#fafafa}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:10px 14px;vertical-align:middle}
+.td-right{text-align:right;font-feature-settings:"tnum"}
+.td-center{text-align:center}
+
+/* ROW STATES */
+tr.vencida{background:#fff5f5 !important}
+tr.vencida:hover{background:#fee2e2 !important}
+tr.proxima{background:#fffbeb !important}
+tr.proxima:hover{background:#fef3c7 !important}
+tr.pagada{opacity:.6}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.vencida{background:#fee2e2;color:#991b1b}
+.badge.proxima{background:#fef3c7;color:#92400e}
+.badge.vigente{background:#dcfce7;color:#166534}
+.badge.pagada{background:#e0f2fe;color:#0369a1}
+.badge.parcial{background:#ede9fe;color:#5b21b6}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-title{font-size:17px;font-weight:700}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:#aaa;padding:4px;line-height:1}
+.modal-body{padding:20px 24px}
+.modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-field{display:flex;flex-direction:column;gap:5px}
+.form-field.full{grid-column:1/-1}
+.form-label{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.4px}
+.form-control{border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;font-family:inherit;color:var(--primary);outline:none;transition:border-color .15s;background:#fff;width:100%}
+.form-control:focus{border-color:#457b9d}
+.section-sep{grid-column:1/-1;font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.8px;padding-bottom:6px;border-bottom:2px solid var(--primary);margin-top:6px}
+
+/* ABONOS */
+.abono-row{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;padding:12px;background:#f8f8f8;border-radius:9px;border:1px solid var(--border);margin-bottom:8px;align-items:center}
+.abono-num{font-size:11px;font-weight:700;color:#aaa;grid-column:1/-1;margin-bottom:-4px}
+.saldo-bar{background:#f0f0f0;border-radius:9px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.saldo-label{font-size:13px;color:#666}
+.saldo-val{font-size:20px;font-weight:800;color:var(--primary)}
+.saldo-val.ok{color:#16a34a}
+.saldo-val.danger{color:#dc2626}
+
+/* CONCILIACION */
+.concil-row{display:grid;grid-template-columns:auto 1fr 1fr 1fr auto;gap:10px;padding:10px 14px;border-radius:9px;border:1px solid var(--border);background:#f8f8f8;margin-bottom:7px;align-items:center;font-size:13px}
+.concil-row.matched{background:#f0fdf4;border-color:#86efac}
+.concil-check{width:20px;height:20px;cursor:pointer;accent-color:#16a34a}
+.concil-empresa{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase}
+
+/* DETAIL VIEW */
+.detail-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:20px 22px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0}
+.detail-cell{padding:10px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.detail-cell:last-child{border-right:none}
+.detail-lbl{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.detail-val{font-size:14px;font-weight:600}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:48px 20px;color:#aaa}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.empty-text{font-size:14px}
+
+/* LOADING */
+.loading{text-align:center;padding:32px;color:#aaa;font-size:13px}
+
+@media(max-width:900px){
+  .stats{grid-template-columns:1fr 1fr}
+  .content{padding:14px}
+  table{font-size:12px}
+  thead th,tbody td{padding:8px 10px}
+  .form-grid{grid-template-columns:1fr}
+  .abono-row{grid-template-columns:1fr 1fr}
+}
+@media(max-width:500px){
+  .stats{grid-template-columns:1fr 1fr}
+  .empresa-cards{flex-direction:column;align-items:center}
+  .empresa-card{min-width:260px;padding:28px 32px}
+}
+</style>
+</head>
+<body>
+
+<!-- EMPRESA SELECTOR -->
+<div id="empresa-selector">
+  <div class="selector-card">
+    <div class="selector-title">Clientes por Cobrar</div>
+    <div class="selector-sub">Selecciona la empresa para gestionar</div>
+    <div class="empresa-cards">
+      <div class="empresa-card" id="card-nbhd" style="cursor:pointer">
+        <div class="emp-icon">&#127968;</div>
+        <div class="emp-name">NBHD</div>
+        <div class="emp-sub">Neighborhood Streetmarket</div>
+      </div>
+      <div class="empresa-card" id="card-pyn" style="cursor:pointer">
+        <div class="emp-icon">&#127978;</div>
+        <div class="emp-name">PYN</div>
+        <div class="emp-sub">Playa y Nieve</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">CRM <span>Clientes por Cobrar</span> · <span id="topbar-emp" style="color:#fff;font-weight:400;font-size:14px"></span></div>
+    <div class="topbar-right">
+      <button class="btn-sm" onclick="showConciliacion()">&#128204; Conciliación</button>
+      <a id="link-crm-sheet" href="#" target="_blank" class="btn-sm btn-blue">&#128196; Google Sheet</a>
+      <button class="btn-sm" onclick="goBack()">&#8592; Cambiar empresa</button>
+    </div>
+  </div>
+
+  <div class="emp-tabs">
+    <div class="emp-tab active" onclick="setTab('NBHD',this)">NBHD</div>
+    <div class="emp-tab" onclick="setTab('PYN',this)">PYN</div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats" id="stats-bar">
+      <div class="stat"><div class="stat-lbl">Total por cobrar</div><div class="stat-val" id="s-total">$0</div></div>
+      <div class="stat"><div class="stat-lbl">Facturas activas</div><div class="stat-val" id="s-count">0</div></div>
+      <div class="stat"><div class="stat-lbl">Vencidas</div><div class="stat-val danger" id="s-venc">0</div></div>
+      <div class="stat"><div class="stat-lbl">Por vencer (7d)</div><div class="stat-val warn" id="s-prox">0</div></div>
+      <div class="stat"><div class="stat-lbl">Pagadas Q mes</div><div class="stat-val ok" id="s-pag">0</div></div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+      <button class="btn-primary" onclick="openNewCliente()">+ Nueva Factura</button>
+      <input class="search-input" id="search-input" placeholder="Buscar cliente, RUT, factura..." oninput="renderTable()">
+      <select class="filter-select" id="filter-estado" onchange="renderTable()">
+        <option value="">Todos los estados</option>
+        <option value="vencida">Vencidas</option>
+        <option value="proxima">Por vencer</option>
+        <option value="vigente">Vigentes</option>
+        <option value="parcial">Pago parcial</option>
+        <option value="pagada">Pagadas</option>
+      </select>
+      <select class="filter-select" id="filter-empresa" onchange="renderTable()">
+        <option value="">Ambas empresas</option>
+        <option value="NBHD">NBHD</option>
+        <option value="PYN">PYN</option>
+      </select>
+      <button class="btn-outline" onclick="cargarClientes()">&#8635; Actualizar</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">Facturas por Cobrar</span>
+        <span class="table-count" id="table-count">0 facturas</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th>Cliente</th>
+              <th>RUT</th>
+              <th>Factura</th>
+              <th style="text-align:right">Monto</th>
+              <th style="text-align:right">Saldo</th>
+              <th>Emisión</th>
+              <th>Vencimiento</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="clientes-tbody">
+            <tr><td colspan="10" class="loading">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA / EDITAR FACTURA -->
+<div class="modal-overlay" id="modal-factura">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-titulo">Nueva Factura</span>
+      <button class="modal-close" onclick="closeModal('modal-factura')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <input type="hidden" id="f-id">
+        <div class="form-field">
+          <label class="form-label">Empresa</label>
+          <select class="form-control" id="f-empresa">
+            <option value="NBHD">NBHD</option>
+            <option value="PYN">PYN</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">N° Factura</label>
+          <input class="form-control" id="f-factura" placeholder="Ej: 001234">
+        </div>
+        <div class="form-field full">
+          <label class="form-label">Nombre Cliente</label>
+          <input class="form-control" id="f-cliente" placeholder="Razón social del cliente">
+        </div>
+        <div class="form-field">
+          <label class="form-label">RUT Cliente</label>
+          <input class="form-control" id="f-rut" placeholder="76.123.456-7">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Monto Factura</label>
+          <input class="form-control" id="f-monto" type="number" placeholder="0">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Fecha Emisión</label>
+          <input class="form-control" id="f-emision" type="date">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Fecha Vencimiento</label>
+          <input class="form-control" id="f-vencimiento" type="date">
+        </div>
+        <div class="form-field full">
+          <label class="form-label">Observaciones</label>
+          <textarea class="form-control" id="f-obs" rows="2" placeholder="Notas sobre esta factura..."></textarea>
+        </div>
+
+        <div class="section-sep">Abonos / Pagos Parciales</div>
+
+        <div class="form-field full" id="abonos-container"></div>
+        <div class="form-field full">
+          <button type="button" class="btn-outline" style="width:100%;justify-content:center" onclick="addAbonoField()">+ Agregar abono</button>
+        </div>
+
+        <div class="saldo-bar form-field full" id="saldo-display">
+          <span class="saldo-label">Saldo pendiente</span>
+          <span class="saldo-val" id="saldo-val">$0</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('modal-factura')">Cancelar</button>
+      <button class="btn-primary" onclick="guardarFactura()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONCILIACION -->
+<div class="modal-overlay" id="modal-concil">
+  <div class="modal" style="max-width:860px">
+    <div class="modal-header">
+      <span class="modal-title">&#128204; Conciliación Bancaria</span>
+      <button class="modal-close" onclick="closeModal('modal-concil')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:12px 16px;font-size:12.5px;color:#92400e;margin-bottom:16px">
+        &#128276; Sube tu cartola bancaria a la <a href="https://docs.google.com/spreadsheets/d/1Cr6o5lOUEDSMYSrUzFNwqfGbI9mlWr_wcHEasYx27b8/edit" target="_blank" style="color:#457b9d;font-weight:600">Google Sheet de Cartola</a> y luego recarga aquí.
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+        <select class="filter-select" id="concil-empresa" onchange="cargarCartola()">
+          <option value="NBHD">NBHD</option>
+          <option value="PYN">PYN</option>
+        </select>
+        <button class="btn-primary" onclick="cargarCartola()">&#8635; Cargar cartola</button>
+        <span id="concil-status" style="font-size:12px;color:#aaa"></span>
+      </div>
+
+      <!-- MOVIMIENTOS CARTOLA -->
+      <div style="font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Movimientos de la cartola</div>
+      <div id="cartola-lista" style="max-height:280px;overflow-y:auto;margin-bottom:20px">
+        <div class="empty-state"><div class="empty-icon">&#128196;</div><div>Carga la cartola para ver los movimientos</div></div>
+      </div>
+
+      <!-- RESULTADO CONCILIACION -->
+      <div style="font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Facturas pendientes de conciliar</div>
+      <div id="concil-facturas" style="max-height:280px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('modal-concil')">Cerrar</button>
+      <button class="btn-primary" onclick="aplicarConciliacion()">Aplicar conciliación seleccionada</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SHEETS_URL =  + SHEETS_URL + ;
+var CRM_SHEET_URL =  + CRM_SHEET_URL + ;
+var CARTOLA_SHEET_URL =  + CARTOLA_SHEET_URL + ;
+
+var clientes = [];
+var cartolaMovs = [];
+var currentEmpresa = 'NBHD';
+var abonosForm = [];
+var editingId = null;
+var concilSeleccionados = {};
+
+// ── EMPRESA ──
+function selectEmpresa(emp) {
+  currentEmpresa = emp;
+  document.getElementById('empresa-selector').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('topbar-emp').textContent = emp;
+  document.getElementById('link-crm-sheet').href = CRM_SHEET_URL;
+  setTab(emp, document.querySelector('.emp-tab'));
+  document.querySelectorAll('.emp-tab').forEach(function(t){
+    t.classList.toggle('active', t.textContent === emp);
+  });
+  document.getElementById('filter-empresa').value = emp;
+  cargarClientes();
+}
+
+function setTab(emp, btn) {
+  currentEmpresa = emp;
+  document.querySelectorAll('.emp-tab').forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('topbar-emp').textContent = emp;
+  document.getElementById('filter-empresa').value = emp;
+  renderTable();
+}
+
+function goBack() {
+  document.getElementById('empresa-selector').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ── DATES ──
+function today() { return new Date().toISOString().split('T')[0]; }
+function daysDiff(dateStr) {
+  if (!dateStr) return null;
+  var d = new Date(dateStr.indexOf('T')!==-1 ? dateStr : dateStr+'T12:00:00');
+  if (isNaN(d)) return null;
+  var now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((d - now) / 86400000);
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  var d = new Date(s.indexOf('T')!==-1?s:s+'T12:00:00');
+  if (isNaN(d)) return s;
+  return d.toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'2-digit'});
+}
+function fmtMoney(n) {
+  var v = parseInt(n)||0;
+  return '$'+Math.abs(v).toLocaleString('es-CL');
+}
+
+// ── ESTADO ──
+function getEstado(c) {
+  var saldo = calcSaldo(c);
+  if (saldo <= 0) return 'pagada';
+  var diff = daysDiff(c.fecha_vencimiento);
+  if (diff === null) return 'vigente';
+  if (diff < 0) return 'vencida';
+  if (diff <= 7) return 'proxima';
+  var totalAbonos = getAbonos(c).reduce(function(s,a){ return s+(parseInt(a.monto)||0); },0);
+  if (totalAbonos > 0) return 'parcial';
+  return 'vigente';
+}
+
+function estadoLabel(e) {
+  var map = {vencida:'Vencida',proxima:'Por vencer',vigente:'Vigente',pagada:'Pagada',parcial:'Pago parcial'};
+  return map[e]||e;
+}
+
+function getAbonos(c) {
+  var abonos = [];
+  if (c.abono1_monto && parseInt(c.abono1_monto)>0) abonos.push({fecha:c.abono1_fecha,monto:c.abono1_monto});
+  if (c.abono2_monto && parseInt(c.abono2_monto)>0) abonos.push({fecha:c.abono2_fecha,monto:c.abono2_monto});
+  if (c.abono3_monto && parseInt(c.abono3_monto)>0) abonos.push({fecha:c.abono3_fecha,monto:c.abono3_monto});
+  for (var i=4;i<=8;i++) {
+    if (c['abono'+i+'_monto'] && parseInt(c['abono'+i+'_monto'])>0)
+      abonos.push({fecha:c['abono'+i+'_fecha'],monto:c['abono'+i+'_monto']});
+  }
+  return abonos;
+}
+
+function calcSaldo(c) {
+  var monto = parseInt(c.monto)||0;
+  var abonos = getAbonos(c).reduce(function(s,a){ return s+(parseInt(a.monto)||0); },0);
+  return monto - abonos;
+}
+
+// ── LOAD DATA ──
+function cargarClientes() {
+  document.getElementById('clientes-tbody').innerHTML = '<tr><td colspan="10" class="loading">Cargando datos...</td></tr>';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', SHEETS_URL + '?type=crm_clientes', true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4) return;
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (r.ok && r.data && r.data.length > 1) {
+        var headers = r.data[0];
+        clientes = r.data.slice(1).filter(function(row){ return row[0]; }).map(function(row) {
+          var obj = {};
+          headers.forEach(function(h,i){ obj[h] = row[i]||''; });
+          if (!obj.id) obj.id = String(Date.now() + Math.random());
+          return obj;
+        });
+      } else { clientes = []; }
+    } catch(e) { clientes = []; }
+    renderTable();
+    renderStats();
+  };
+  xhr.send();
+}
+
+function guardarClientesSheet() {
+  if (!clientes.length) return;
+  var headers = ['empresa','id','cliente','rut','factura','monto','fecha_emision','fecha_vencimiento','estado',
+    'abono1_fecha','abono1_monto','abono2_fecha','abono2_monto','abono3_fecha','abono3_monto',
+    'abono4_fecha','abono4_monto','abono5_fecha','abono5_monto','saldo','observaciones'];
+  var data = [headers].concat(clientes.map(function(c) {
+    return headers.map(function(h){ return c[h]||''; });
+  }));
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SHEETS_URL, true);
+  xhr.setRequestHeader('Content-Type','text/plain');
+  xhr.send(JSON.stringify({type:'crm_clientes', data:data}));
+}
+
+// ── RENDER TABLE ──
+function renderTable() {
+  var search = (document.getElementById('search-input').value||'').toLowerCase();
+  var filtroEst = document.getElementById('filter-estado').value;
+  var filtroEmp = document.getElementById('filter-empresa').value;
+
+  var filtered = clientes.filter(function(c) {
+    if (filtroEmp && c.empresa !== filtroEmp) return false;
+    var est = getEstado(c);
+    if (filtroEst && est !== filtroEst) return false;
+    if (search) {
+      var hay = (c.cliente+c.rut+c.factura+c.empresa).toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('table-count').textContent = filtered.length + ' facturas';
+
+  if (!filtered.length) {
+    document.getElementById('clientes-tbody').innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">&#128196;</div><div class="empty-text">No hay facturas que coincidan</div></div></td></tr>';
+    return;
+  }
+
+  var rows = filtered.map(function(c) {
+    var est = getEstado(c);
+    var saldo = calcSaldo(c);
+    var diff = daysDiff(c.fecha_vencimiento);
+    var diffText = diff !== null ? (diff < 0 ? Math.abs(diff)+'d vencida' : diff === 0 ? 'Hoy' : diff+'d') : '—';
+    var rowClass = est === 'vencida' ? 'vencida' : est === 'proxima' ? 'proxima' : est === 'pagada' ? 'pagada' : '';
+    var abCount = getAbonos(c).length;
+    return '<tr class="'+rowClass+'" onclick="openEditCliente(''+c.id+'')">' +
+      '<td><span style="font-size:11px;font-weight:700;background:rgba(26,26,46,.08);padding:2px 7px;border-radius:5px">'+c.empresa+'</span></td>' +
+      '<td style="font-weight:600">'+c.cliente+'</td>' +
+      '<td style="color:#888;font-size:12px">'+c.rut+'</td>' +
+      '<td style="font-size:12px">'+c.factura+'</td>' +
+      '<td class="td-right" style="font-weight:600">'+fmtMoney(c.monto)+'</td>' +
+      '<td class="td-right" style="font-weight:700;color:'+(saldo<=0?'#16a34a':est==='vencida'?'#dc2626':'#1a1a2e')+'">'+fmtMoney(saldo)+'</td>' +
+      '<td style="font-size:12px;color:#888">'+fmtDate(c.fecha_emision)+'</td>' +
+      '<td style="font-size:12px"><span style="'+(diff!==null&&diff<0?'color:#dc2626;font-weight:700':diff!==null&&diff<=7?'color:#d97706;font-weight:600':'')+'">'+fmtDate(c.fecha_vencimiento)+'</span><br><span style="font-size:10px;color:#aaa">'+diffText+'</span></td>' +
+      '<td><span class="badge '+est+'">'+estadoLabel(est)+'</span>'+(abCount?'<span style="font-size:10px;color:#888;margin-left:4px">'+abCount+' ab.</span>':'')+'</td>' +
+      '<td onclick="event.stopPropagation()">' +
+        '<button class="btn-outline" style="padding:4px 10px;font-size:11px" onclick="openEditCliente(''+c.id+'')">&#9998; Editar</button>' +
+        '<button class="btn-outline" style="padding:4px 8px;font-size:11px;margin-left:4px;color:#dc2626" onclick="eliminarFactura(''+c.id+'')">&#128465;</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById('clientes-tbody').innerHTML = rows;
+}
+
+// ── STATS ──
+function renderStats() {
+  var empFilter = currentEmpresa;
+  var emp = clientes.filter(function(c){ return c.empresa === empFilter; });
+  var total = emp.reduce(function(s,c){ return s + calcSaldo(c); },0);
+  var venc = emp.filter(function(c){ return getEstado(c)==='vencida'; }).length;
+  var prox = emp.filter(function(c){ return getEstado(c)==='proxima'; }).length;
+  var pag = emp.filter(function(c){ return getEstado(c)==='pagada'; }).length;
+  var act = emp.filter(function(c){ return getEstado(c)!=='pagada'; }).length;
+  document.getElementById('s-total').textContent = fmtMoney(total);
+  document.getElementById('s-count').textContent = act;
+  document.getElementById('s-venc').textContent = venc;
+  document.getElementById('s-prox').textContent = prox;
+  document.getElementById('s-pag').textContent = pag;
+}
+
+// ── MODAL FACTURA ──
+function openNewCliente() {
+  editingId = null;
+  abonosForm = [];
+  document.getElementById('modal-titulo').textContent = 'Nueva Factura';
+  document.getElementById('f-id').value = '';
+  document.getElementById('f-empresa').value = currentEmpresa;
+  ['f-cliente','f-rut','f-factura','f-obs'].forEach(function(i){ document.getElementById(i).value=''; });
+  ['f-monto'].forEach(function(i){ document.getElementById(i).value=''; });
+  document.getElementById('f-emision').value = today();
+  document.getElementById('f-vencimiento').value = '';
+  renderAbonosForm();
+  updateSaldoDisplay();
+  document.getElementById('modal-factura').classList.add('open');
+}
+
+function openEditCliente(id) {
+  var c = clientes.find(function(x){ return x.id===id; });
+  if (!c) return;
+  editingId = id;
+  abonosForm = getAbonos(c).map(function(a){ return Object.assign({},a); });
+  document.getElementById('modal-titulo').textContent = 'Editar Factura · '+c.cliente;
+  document.getElementById('f-id').value = c.id;
+  document.getElementById('f-empresa').value = c.empresa||'NBHD';
+  document.getElementById('f-cliente').value = c.cliente||'';
+  document.getElementById('f-rut').value = c.rut||'';
+  document.getElementById('f-factura').value = c.factura||'';
+  document.getElementById('f-monto').value = c.monto||'';
+  document.getElementById('f-emision').value = (c.fecha_emision||'').substring(0,10);
+  document.getElementById('f-vencimiento').value = (c.fecha_vencimiento||'').substring(0,10);
+  document.getElementById('f-obs').value = c.observaciones||'';
+  renderAbonosForm();
+  updateSaldoDisplay();
+  document.getElementById('modal-factura').classList.add('open');
+}
+
+function addAbonoField() {
+  abonosForm.push({fecha:'',monto:''});
+  renderAbonosForm();
+}
+
+function renderAbonosForm() {
+  var c = document.getElementById('abonos-container');
+  if (!abonosForm.length) {
+    c.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px 0">Sin abonos registrados. Agrega uno abajo.</div>';
+  } else {
+    c.innerHTML = abonosForm.map(function(a,i){
+      return '<div class="abono-row">'+
+        '<span class="abono-num">Abono '+(i+1)+'</span>'+
+        '<input class="form-control" type="date" value="'+(a.fecha||'')+'" onchange="updAbono('+i+','fecha',this.value)" placeholder="Fecha">'+
+        '<input class="form-control" type="number" value="'+(a.monto||'')+'" onchange="updAbono('+i+','monto',this.value);updateSaldoDisplay()" oninput="updateSaldoDisplay()" placeholder="Monto $">'+
+        '<button type="button" style="background:#fee2e2;border:none;border-radius:7px;cursor:pointer;color:#dc2626;font-weight:700;padding:6px 10px;font-size:14px" onclick="delAbono('+i+')">&#215;</button>'+
+      '</div>';
+    }).join('');
+  }
+  updateSaldoDisplay();
+}
+
+function updAbono(i,field,val) { if(abonosForm[i]) abonosForm[i][field]=val; }
+function delAbono(i) { abonosForm.splice(i,1); renderAbonosForm(); }
+
+function updateSaldoDisplay() {
+  var monto = parseInt(document.getElementById('f-monto').value)||0;
+  var totalAb = abonosForm.reduce(function(s,a){ return s+(parseInt(a.monto)||0); },0);
+  var saldo = monto - totalAb;
+  var el = document.getElementById('saldo-val');
+  el.textContent = fmtMoney(saldo);
+  el.className = 'saldo-val ' + (saldo<=0?'ok':saldo<monto*0.3?'warn':'');
+}
+
+function guardarFactura() {
+  var empresa = document.getElementById('f-empresa').value;
+  var cliente = document.getElementById('f-cliente').value.trim();
+  var monto   = document.getElementById('f-monto').value;
+  var vcto    = document.getElementById('f-vencimiento').value;
+  if (!cliente) { alert('Ingresa el nombre del cliente'); return; }
+  if (!monto)   { alert('Ingresa el monto'); return; }
+  if (!vcto)    { alert('Ingresa la fecha de vencimiento'); return; }
+
+  var obj = {
+    empresa: empresa,
+    id: editingId || String(Date.now()),
+    cliente: cliente,
+    rut: document.getElementById('f-rut').value.trim(),
+    factura: document.getElementById('f-factura').value.trim(),
+    monto: monto,
+    fecha_emision: document.getElementById('f-emision').value,
+    fecha_vencimiento: vcto,
+    observaciones: document.getElementById('f-obs').value.trim(),
+  };
+
+  abonosForm.forEach(function(a,i){
+    obj['abono'+(i+1)+'_fecha'] = a.fecha||'';
+    obj['abono'+(i+1)+'_monto'] = a.monto||'';
+  });
+  obj.saldo = String(calcSaldoObj(obj));
+
+  if (editingId) {
+    var idx = clientes.findIndex(function(x){ return x.id===editingId; });
+    if (idx !== -1) clientes[idx] = obj;
+  } else {
+    clientes.unshift(obj);
+  }
+
+  guardarClientesSheet();
+  closeModal('modal-factura');
+  renderTable();
+  renderStats();
+}
+
+function calcSaldoObj(c) {
+  var monto = parseInt(c.monto)||0;
+  var ab = 0;
+  for (var i=1;i<=8;i++) { ab += parseInt(c['abono'+i+'_monto'])||0; }
+  return monto - ab;
+}
+
+function eliminarFactura(id) {
+  if (!confirm('Eliminar esta factura?')) return;
+  clientes = clientes.filter(function(x){ return x.id!==id; });
+  guardarClientesSheet();
+  renderTable();
+  renderStats();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── CONCILIACION ──
+function showConciliacion() {
+  document.getElementById('modal-concil').classList.add('open');
+  cargarCartola();
+  renderConcilFacturas();
+}
+
+function cargarCartola() {
+  var emp = document.getElementById('concil-empresa').value;
+  document.getElementById('concil-status').textContent = 'Cargando...';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', SHEETS_URL + '?type=cartola_bancaria', true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4) return;
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (r.ok && r.data && r.data.length > 1) {
+        var headers = r.data[0];
+        cartolaMovs = r.data.slice(1).filter(function(row){return row[0];}).map(function(row){
+          var obj={};
+          headers.forEach(function(h,i){obj[h]=row[i]||'';});
+          return obj;
+        }).filter(function(m){ return !emp || m.empresa===emp; });
+      } else { cartolaMovs = []; }
+    } catch(e) { cartolaMovs = []; }
+    document.getElementById('concil-status').textContent = cartolaMovs.length + ' movimientos';
+    renderCartola();
+    renderConcilFacturas();
+  };
+  xhr.send();
+}
+
+function renderCartola() {
+  var el = document.getElementById('cartola-lista');
+  if (!cartolaMovs.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128196;</div><div>Sin movimientos. Sube la cartola al Sheet.</div></div>';
+    return;
+  }
+  el.innerHTML = cartolaMovs.map(function(m,i){
+    var matched = concilSeleccionados['mov_'+i];
+    return '<div class="concil-row'+(matched?' matched':'')+'">' +
+      '<input type="checkbox" class="concil-check" id="mov_'+i+'" onchange="toggleConcilMov('+i+',this.checked)">' +
+      '<div><div style="font-size:12px;font-weight:600">'+m.descripcion+'</div><div class="concil-empresa">'+m.empresa+'</div></div>' +
+      '<div style="font-size:12px;color:#888">'+fmtDate(m.fecha)+'</div>' +
+      '<div style="font-size:13px;font-weight:700;color:'+(parseInt(m.monto)>=0?'#16a34a':'#dc2626')+'">'+fmtMoney(m.monto)+'</div>' +
+      '<div style="font-size:11px;color:#aaa">'+(m.conciliado?'&#10003; Conciliado':'Pendiente')+'</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleConcilMov(i, checked) {
+  if (checked) { concilSeleccionados['mov_'+i] = cartolaMovs[i]; }
+  else { delete concilSeleccionados['mov_'+i]; }
+}
+
+function renderConcilFacturas() {
+  var emp = document.getElementById('concil-empresa').value;
+  var el = document.getElementById('concil-facturas');
+  var pendientes = clientes.filter(function(c){
+    return (!emp || c.empresa===emp) && getEstado(c)!=='pagada';
+  });
+  if (!pendientes.length) {
+    el.innerHTML = '<div class="empty-state"><div>Sin facturas pendientes</div></div>';
+    return;
+  }
+  el.innerHTML = pendientes.map(function(c){
+    var saldo = calcSaldo(c);
+    var est = getEstado(c);
+    return '<div class="concil-row" style="cursor:pointer" onclick="abonarDesdeCartola(''+c.id+'')">' +
+      '<span style="font-size:16px">&#10133;</span>' +
+      '<div><div style="font-size:12px;font-weight:600">'+c.cliente+'</div><div style="font-size:11px;color:#aaa">'+c.factura+' · '+c.empresa+'</div></div>' +
+      '<div style="font-size:12px;color:#888">Vcto: '+fmtDate(c.fecha_vencimiento)+'</div>' +
+      '<div style="font-size:13px;font-weight:700">'+fmtMoney(saldo)+'</div>' +
+      '<span class="badge '+est+'">'+estadoLabel(est)+'</span>' +
+    '</div>';
+  }).join('');
+}
+
+function abonarDesdeCartola(facturaId) {
+  var movs = Object.values(concilSeleccionados);
+  if (!movs.length) {
+    // Manual - ask amount
+    var monto = prompt('Ingresa el monto del abono manual:');
+    if (!monto || isNaN(parseInt(monto))) return;
+    aplicarAbono(facturaId, today(), monto);
+  } else {
+    var totalMovs = movs.reduce(function(s,m){ return s+(parseInt(m.monto)||0); },0);
+    if (confirm('Aplicar abono de '+fmtMoney(totalMovs)+' a esta factura?')) {
+      aplicarAbono(facturaId, today(), String(totalMovs));
+      concilSeleccionados = {};
+    }
+  }
+}
+
+function aplicarAbono(facturaId, fecha, monto) {
+  var c = clientes.find(function(x){ return x.id===facturaId; });
+  if (!c) return;
+  for (var i=1;i<=8;i++) {
+    if (!c['abono'+i+'_monto'] || parseInt(c['abono'+i+'_monto'])===0) {
+      c['abono'+i+'_fecha'] = fecha;
+      c['abono'+i+'_monto'] = monto;
+      break;
+    }
+  }
+  c.saldo = String(calcSaldoObj(c));
+  guardarClientesSheet();
+  renderTable();
+  renderStats();
+  renderConcilFacturas();
+  alert('Abono de '+fmtMoney(parseInt(monto))+' aplicado correctamente.');
+}
+
+function aplicarConciliacion() {
+  var movs = Object.values(concilSeleccionados);
+  if (!movs.length) { alert('Selecciona al menos un movimiento de la cartola'); return; }
+  closeModal('modal-concil');
+  // Show table with filtered empresa for user to select factura
+  renderTable();
+  alert('Selecciona una factura en la tabla para aplicar el abono de '+fmtMoney(movs.reduce(function(s,m){return s+(parseInt(m.monto)||0);},0)));
+}
+
+// ── INIT ──
+// Attach empresa card clicks safely
+(function() {
+  function attachCards() {
+    var n = document.getElementById('card-nbhd');
+    var p = document.getElementById('card-pyn');
+    if (n) n.onclick = function(){ selectEmpresa('NBHD'); };
+    if (p) p.onclick = function(){ selectEmpresa('PYN'); };
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachCards);
+  } else {
+    attachCards();
+  }
+})();
+</script>
+</body>
+</html>
