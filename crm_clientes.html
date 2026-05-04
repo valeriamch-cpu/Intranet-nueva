@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>CRM Clientes por Cobrar</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+:root{--primary:#1a1a2e;--accent:#e63946;--border:rgba(0,0,0,.08);--card:#fff}
+.topbar{background:var(--primary);padding:0 22px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:10px}
+.topbar-logo{color:#fff;font-size:15px;font-weight:700}
+.topbar-logo span{color:#e63946}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bsm{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);border:none;border-radius:7px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.bsm:hover{background:rgba(255,255,255,.2)}
+.bblue{background:#457b9d !important}
+
+/* SELECTOR */
+#selector{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--primary)}
+.sel-card{text-align:center;padding:20px}
+.sel-title{color:#fff;font-size:26px;font-weight:700;margin-bottom:8px}
+.sel-sub{color:rgba(255,255,255,.45);font-size:14px;margin-bottom:40px}
+.emp-cards{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+.ecard{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:32px 40px;cursor:pointer;transition:all .2s;text-align:center;min-width:190px}
+.ecard:hover{background:rgba(255,255,255,.1);transform:translateY(-2px)}
+.ecard .eicon{font-size:38px;margin-bottom:12px}
+.ecard .ename{color:#fff;font-size:19px;font-weight:700}
+.ecard .esub{color:rgba(255,255,255,.4);font-size:12px;margin-top:3px}
+
+/* APP */
+#app{display:none;flex-direction:column;min-height:100vh}
+.etabs{background:var(--primary);padding:0 22px;display:flex;gap:4px;border-top:1px solid rgba(255,255,255,.08)}
+.etab{padding:10px 18px;color:rgba(255,255,255,.5);font-size:13px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent}
+.etab.active{color:#fff;border-bottom-color:#e63946}
+.content{padding:20px;max-width:1360px;margin:0 auto;width:100%;flex:1}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border-radius:10px;padding:13px 15px;border:1px solid var(--border)}
+.slbl{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.sval{font-size:19px;font-weight:800;color:var(--primary)}
+.sval.r{color:#dc2626}.sval.y{color:#d97706}.sval.g{color:#16a34a}
+
+/* ACTIONS */
+.abar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.bpri{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
+.bpri:hover{opacity:.87}
+.bout{background:none;color:#555;border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
+.bout:hover{background:#f5f5f5}
+.sinput{flex:1;min-width:180px;border:1px solid var(--border);border-radius:8px;padding:9px 13px;font-size:13px;font-family:inherit;outline:none;background:#fff}
+.sinput:focus{border-color:#457b9d}
+.sselect{border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none;background:#fff;cursor:pointer}
+
+/* TABLE */
+.twrap{background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.thead{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ttitle{font-size:14px;font-weight:700}
+.tcnt{font-size:12px;color:#aaa}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;padding:9px 13px;border-bottom:2px solid #f0f0f0;white-space:nowrap}
+tbody tr{border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background .1s}
+tbody tr:hover{background:#fafafa}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:9px 13px;vertical-align:middle}
+.tr{text-align:right;font-feature-settings:"tnum"}
+
+/* STATES */
+tr.venc{background:#fff5f5 !important}tr.venc:hover{background:#fee2e2 !important}
+tr.prox{background:#fffbeb !important}tr.prox:hover{background:#fef3c7 !important}
+tr.pag{opacity:.55}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.bv{background:#fee2e2;color:#991b1b}
+.bp{background:#fef3c7;color:#92400e}
+.bg{background:#dcfce7;color:#166534}
+.bb{background:#e0f2fe;color:#0369a1}
+.bm{background:#ede9fe;color:#5b21b6}
+
+/* MODAL */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+.moverlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:660px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.mhdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.mtitle{font-size:16px;font-weight:700}
+.mclose{background:none;border:none;font-size:22px;cursor:pointer;color:#aaa;line-height:1}
+.mbody{padding:18px 22px}
+.mfoot{padding:13px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+/* FORM */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.ffield{display:flex;flex-direction:column;gap:5px}
+.ffield.full{grid-column:1/-1}
+.flbl{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.4px}
+.fctl{border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;color:var(--primary);outline:none;background:#fff;width:100%}
+.fctl:focus{border-color:#457b9d}
+.fsep{grid-column:1/-1;font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.8px;padding-bottom:6px;border-bottom:2px solid var(--primary);margin-top:4px}
+.abrow{display:grid;grid-template-columns:1fr 1fr auto;gap:9px;padding:11px;background:#f8f8f8;border-radius:9px;border:1px solid var(--border);margin-bottom:8px;align-items:center}
+.abnum{font-size:11px;font-weight:700;color:#aaa;grid-column:1/-1;margin-bottom:-3px}
+.saldo-bar{background:#f0f0f0;border-radius:9px;padding:12px 15px;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.saldo-lbl{font-size:13px;color:#666}
+.saldo-num{font-size:20px;font-weight:800;color:var(--primary)}
+.saldo-num.ok{color:#16a34a}.saldo-num.warn{color:#d97706}
+
+/* EMPTY */
+.empty{text-align:center;padding:44px 20px;color:#aaa}
+.empty-icon{font-size:38px;margin-bottom:10px}
+
+@media(max-width:800px){
+  .stats{grid-template-columns:1fr 1fr}
+  .content{padding:13px}
+  .fgrid{grid-template-columns:1fr}
+  table{font-size:12px}
+  thead th,tbody td{padding:8px 10px}
+}
+</style>
+</head>
+<body>
+
+<div id="selector">
+  <div class="sel-card">
+    <div class="sel-title">Clientes por Cobrar</div>
+    <div class="sel-sub">Selecciona la empresa</div>
+    <div class="emp-cards">
+      <div class="ecard" id="card-nbhd">
+        <div class="eicon">&#127968;</div>
+        <div class="ename">NBHD</div>
+        <div class="esub">Neighborhood Streetmarket</div>
+      </div>
+      <div class="ecard" id="card-pyn">
+        <div class="eicon">&#127978;</div>
+        <div class="ename">PYN</div>
+        <div class="esub">Playa y Nieve</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">CRM <span>Clientes por Cobrar</span> &middot; <span id="top-emp" style="color:#fff;font-weight:400;font-size:13px"></span></div>
+    <div class="topbar-right">
+      <a id="link-sheet" href="#" target="_blank" class="bsm bblue">&#128196; Google Sheet</a>
+      <button class="bsm" onclick="goBack()">&#8592; Cambiar empresa</button>
+    </div>
+  </div>
+  <div class="etabs">
+    <div class="etab active" id="tab-nbhd" onclick="setTab('NBHD')">NBHD</div>
+    <div class="etab" id="tab-pyn" onclick="setTab('PYN')">PYN</div>
+  </div>
+  <div class="content">
+    <div class="stats">
+      <div class="stat"><div class="slbl">Total por cobrar</div><div class="sval" id="s-total">$0</div></div>
+      <div class="stat"><div class="slbl">Facturas activas</div><div class="sval" id="s-act">0</div></div>
+      <div class="stat"><div class="slbl">Vencidas</div><div class="sval r" id="s-venc">0</div></div>
+      <div class="stat"><div class="slbl">Por vencer 7d</div><div class="sval y" id="s-prox">0</div></div>
+      <div class="stat"><div class="slbl">Pagadas</div><div class="sval g" id="s-pag">0</div></div>
+    </div>
+    <div class="abar">
+      <button class="bpri" onclick="openNew()">+ Nueva Factura</button>
+      <input class="sinput" id="q" placeholder="Buscar cliente, RUT, factura..." oninput="render()">
+      <select class="sselect" id="fest" onchange="render()">
+        <option value="">Todos los estados</option>
+        <option value="vencida">Vencidas</option>
+        <option value="proxima">Por vencer</option>
+        <option value="vigente">Vigentes</option>
+        <option value="parcial">Pago parcial</option>
+        <option value="pagada">Pagadas</option>
+      </select>
+      <button class="bout" onclick="load()">&#8635; Actualizar</button>
+    </div>
+    <div class="twrap">
+      <div class="thead">
+        <span class="ttitle">Facturas</span>
+        <span class="tcnt" id="tcnt">0</span>
+      </div>
+      <div class="tscroll">
+        <table>
+          <thead><tr>
+            <th>Empresa</th><th>Cliente</th><th>RUT</th><th>Factura</th>
+            <th style="text-align:right">Monto</th><th style="text-align:right">Saldo</th>
+            <th>Emisión</th><th>Vencimiento</th><th>Estado</th><th>Acción</th>
+          </tr></thead>
+          <tbody id="tbody"><tr><td colspan="10" class="empty">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="moverlay" id="modal">
+  <div class="modal">
+    <div class="mhdr">
+      <span class="mtitle" id="mtitle">Nueva Factura</span>
+      <button class="mclose" onclick="closeModal()">&#215;</button>
+    </div>
+    <div class="mbody">
+      <div class="fgrid">
+        <div class="ffield">
+          <label class="flbl">Empresa</label>
+          <select class="fctl" id="f-emp"><option value="NBHD">NBHD</option><option value="PYN">PYN</option></select>
+        </div>
+        <div class="ffield">
+          <label class="flbl">N° Factura</label>
+          <input class="fctl" id="f-fac" placeholder="001234">
+        </div>
+        <div class="ffield full">
+          <label class="flbl">Nombre Cliente</label>
+          <input class="fctl" id="f-cli" placeholder="Razón social">
+        </div>
+        <div class="ffield">
+          <label class="flbl">RUT</label>
+          <input class="fctl" id="f-rut" placeholder="76.123.456-7">
+        </div>
+        <div class="ffield">
+          <label class="flbl">Monto</label>
+          <input class="fctl" id="f-monto" type="number" placeholder="0" oninput="updSaldo()">
+        </div>
+        <div class="ffield">
+          <label class="flbl">Fecha Emisión</label>
+          <input class="fctl" id="f-emis" type="date">
+        </div>
+        <div class="ffield">
+          <label class="flbl">Fecha Vencimiento</label>
+          <input class="fctl" id="f-vcto" type="date">
+        </div>
+        <div class="ffield full">
+          <label class="flbl">Observaciones</label>
+          <textarea class="fctl" id="f-obs" rows="2"></textarea>
+        </div>
+        <div class="fsep">Abonos / Pagos Parciales</div>
+        <div class="ffield full" id="abonos-wrap"></div>
+        <div class="ffield full">
+          <button type="button" class="bout" style="justify-content:center" onclick="addAbono()">+ Agregar abono</button>
+        </div>
+        <div class="saldo-bar ffield full">
+          <span class="saldo-lbl">Saldo pendiente</span>
+          <span class="saldo-num" id="saldo-num">$0</span>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="bout" onclick="closeModal()">Cancelar</button>
+      <button class="bpri" onclick="save()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwRuILHijnu9sXEMg1PBVahH2GOaq6L_ICDg6knDnoNgaaxatVmf4UHNtrUT8StdRoNWA/exec';
+var CRM_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ncxF5ihT42rM3hHKnKsvoGXze9vq8aZwEtyPhDxQyEY/edit?usp=sharing';
+
+var clientes = [];
+var empActual = 'NBHD';
+var editId = null;
+var abonos = [];
+
+// ── INIT ──
+document.getElementById('card-nbhd').onclick = function(){ selectEmpresa('NBHD'); };
+document.getElementById('card-pyn').onclick  = function(){ selectEmpresa('PYN');  };
+
+function selectEmpresa(emp) {
+  empActual = emp;
+  document.getElementById('selector').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('top-emp').textContent = emp;
+  document.getElementById('link-sheet').href = CRM_SHEET_URL;
+  setTab(emp);
+  load();
+}
+
+function goBack() {
+  document.getElementById('selector').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function setTab(emp) {
+  empActual = emp;
+  document.getElementById('tab-nbhd').className = 'etab' + (emp==='NBHD'?' active':'');
+  document.getElementById('tab-pyn').className  = 'etab' + (emp==='PYN'?' active':'');
+  document.getElementById('top-emp').textContent = emp;
+  render();
+  renderStats();
+}
+
+// ── DATA ──
+function load() {
+  document.getElementById('tbody').innerHTML = '<tr><td colspan="10" class="empty">Cargando...</td></tr>';
+  var cb = 'gvizCb' + Date.now();
+  window[cb] = function(resp) {
+    try {
+      var rows = resp.table.rows;
+      var cols = resp.table.cols.map(function(col){ return col.label.toLowerCase().trim().replace(/ /g,'_'); });
+      clientes = rows.filter(function(row){ return row.c && row.c[0] && row.c[0].v; }).map(function(row) {
+        var o = {};
+        cols.forEach(function(h,i){
+          var cell = row.c && row.c[i];
+          o[h] = cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v) : '') : '';
+        });
+        if (!o.id) o.id = String(Date.now()+Math.random());
+        return o;
+      });
+    } catch(e) { console.log('Error:', e); clientes = []; }
+    render(); renderStats();
+  };
+  var s = document.createElement('script');
+  s.src = 'https://docs.google.com/spreadsheets/d/1ncxF5ihT42rM3hHKnKsvoGXze9vq8aZwEtyPhDxQyEY/gviz/tq?sheet=crm_clientes&tqx=responseHandler:' + cb;
+  s.onerror = function(){ clientes=[]; render(); renderStats(); };
+  document.head.appendChild(s);
+  setTimeout(function(){
+    try{document.head.removeChild(s);}catch(e){}
+    if(!clientes.length){ render(); renderStats(); }
+  }, 8000);
+}
+
+function saveToSheet() {
+  var hdr = ['empresa','id','cliente','rut','factura','monto','fecha_emision','fecha_vencimiento',
+    'abono1_fecha','abono1_monto','abono2_fecha','abono2_monto','abono3_fecha','abono3_monto','abono4_fecha','abono4_monto','abono5_fecha','abono5_monto','abono6_fecha','abono6_monto','abono7_fecha','abono7_monto','abono8_fecha','abono8_monto','abono9_fecha','abono9_monto','abono10_fecha','abono10_monto','abono11_fecha','abono11_monto','abono12_fecha','abono12_monto','abono13_fecha','abono13_monto','abono14_fecha','abono14_monto','abono15_fecha','abono15_monto','abono16_fecha','abono16_monto','abono17_fecha','abono17_monto','abono18_fecha','abono18_monto','abono19_fecha','abono19_monto','abono20_fecha','abono20_monto','saldo','observaciones'];
+  var data = [hdr].concat(clientes.map(function(c){
+    return hdr.map(function(h){ return c[h]||''; });
+  }));
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SHEETS_URL, true);
+  xhr.setRequestHeader('Content-Type','text/plain');
+  xhr.send(JSON.stringify({type:'crm_clientes', data:data}));
+}
+
+// ── HELPERS ──
+function today() { return new Date().toISOString().split('T')[0]; }
+function dd(s) {
+  if (!s) return null;
+  var d = new Date(s.indexOf('T')!==-1?s:s+'T12:00:00');
+  if (isNaN(d)) return null;
+  var n = new Date(); n.setHours(0,0,0,0);
+  return Math.round((d-n)/86400000);
+}
+function fd(s) {
+  if (!s) return '—';
+  var d = new Date(s.indexOf('T')!==-1?s:s+'T12:00:00');
+  if (isNaN(d)) return s;
+  return d.toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'2-digit'});
+}
+function fm(n) { return '$'+Math.abs(parseInt(n)||0).toLocaleString('es-CL'); }
+
+function getAbonos(c) {
+  var r = [];
+  for (var i=1;i<=20;i++) {
+    var m = parseInt(c['abono'+i+'_monto'])||0;
+    if (m>0) r.push({fecha:c['abono'+i+'_fecha'],monto:m});
+  }
+  return r;
+}
+function saldo(c) {
+  return (parseInt(c.monto)||0) - getAbonos(c).reduce(function(s,a){return s+a.monto;},0);
+}
+function estado(c) {
+  var s = saldo(c);
+  if (s<=0) return 'pagada';
+  var d = dd(c.fecha_vencimiento);
+  if (d===null) return 'vigente';
+  if (d<0)  return 'vencida';
+  if (d<=7) return 'proxima';
+  if (getAbonos(c).length>0) return 'parcial';
+  return 'vigente';
+}
+function estLabel(e) {
+  return {vencida:'Vencida',proxima:'Por vencer',vigente:'Vigente',pagada:'Pagada',parcial:'Pago parcial'}[e]||e;
+}
+function estClass(e) {
+  return {vencida:'bv',proxima:'bp',vigente:'bg',pagada:'bb',parcial:'bm'}[e]||'';
+}
+
+// ── RENDER TABLE ──
+function render() {
+  var q  = (document.getElementById('q').value||'').toLowerCase();
+  var fe = document.getElementById('fest').value;
+  var filtered = clientes.filter(function(c) {
+    if (c.empresa !== empActual) return false;
+    if (fe && estado(c) !== fe) return false;
+    if (q && (c.cliente+c.rut+c.factura).toLowerCase().indexOf(q)===-1) return false;
+    return true;
+  });
+  document.getElementById('tcnt').textContent = filtered.length + ' facturas';
+  var tb = document.getElementById('tbody');
+  if (!filtered.length) {
+    tb.innerHTML = '<tr><td colspan="10"><div class="empty"><div class="empty-icon">&#128196;</div>Sin facturas</div></td></tr>';
+    return;
+  }
+  while (tb.firstChild) tb.removeChild(tb.firstChild);
+  filtered.forEach(function(c) {
+    var est = estado(c);
+    var sal = saldo(c);
+    var dif = dd(c.fecha_vencimiento);
+    var rc  = est==='vencida'?'venc':est==='proxima'?'prox':est==='pagada'?'pag':'';
+    var difTxt = dif!==null?(dif<0?Math.abs(dif)+'d venc':dif===0?'Hoy':dif+'d'):'—';
+    var scol = sal<=0?'#16a34a':est==='vencida'?'#dc2626':'';
+    var tr = document.createElement('tr');
+    if (rc) tr.className = rc;
+    tr.innerHTML =
+      '<td><span style="font-size:11px;font-weight:700;background:rgba(26,26,46,.08);padding:2px 7px;border-radius:5px">'+c.empresa+'</span></td>'+
+      '<td style="font-weight:600">'+c.cliente+'</td>'+
+      '<td style="color:#888;font-size:12px">'+c.rut+'</td>'+
+      '<td style="font-size:12px">'+c.factura+'</td>'+
+      '<td class="tr" style="font-weight:600">'+fm(c.monto)+'</td>'+
+      '<td class="tr" style="font-weight:700;color:'+scol+'">'+fm(sal)+'</td>'+
+      '<td style="font-size:12px;color:#888">'+fd(c.fecha_emision)+'</td>'+
+      '<td style="font-size:12px">'+(dif!==null&&dif<0?'<span style="color:#dc2626;font-weight:700">':dif!==null&&dif<=7?'<span style="color:#d97706;font-weight:600">':'<span>')+fd(c.fecha_vencimiento)+'</span><br><span style="font-size:10px;color:#aaa">'+difTxt+'</span></td>'+
+      '<td><span class="badge '+estClass(est)+'">'+estLabel(est)+'</span></td>'+
+      '<td><button style="background:none;border:1px solid #ddd;border-radius:6px;padding:4px 9px;font-size:11px;cursor:pointer" onclick="openEdit(\'EDITID\')">Editar</button></td>';
+    // Fix edit button with real id
+    tr.querySelector('button').setAttribute('onclick','openEdit(\''+c.id+'\')');
+    tr.addEventListener('click', (function(id){ return function(e){ if(e.target.tagName!=='BUTTON') openEdit(id); }; })(c.id));
+    document.getElementById('tbody').appendChild(tr);
+  });
+}
+
+// ── STATS ──
+function renderStats() {
+  var emp = clientes.filter(function(c){ return c.empresa===empActual; });
+  document.getElementById('s-total').textContent = fm(emp.reduce(function(s,c){ return s+saldo(c); },0));
+  document.getElementById('s-act').textContent   = emp.filter(function(c){ return estado(c)!=='pagada'; }).length;
+  document.getElementById('s-venc').textContent  = emp.filter(function(c){ return estado(c)==='vencida'; }).length;
+  document.getElementById('s-prox').textContent  = emp.filter(function(c){ return estado(c)==='proxima'; }).length;
+  document.getElementById('s-pag').textContent   = emp.filter(function(c){ return estado(c)==='pagada'; }).length;
+}
+
+// ── MODAL ──
+function openNew() {
+  editId=null; abonos=[];
+  document.getElementById('mtitle').textContent='Nueva Factura';
+  document.getElementById('f-emp').value=empActual;
+  ['f-fac','f-cli','f-rut','f-obs'].forEach(function(i){document.getElementById(i).value='';});
+  document.getElementById('f-monto').value='';
+  document.getElementById('f-emis').value=today();
+  document.getElementById('f-vcto').value='';
+  renderAbonos();
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  var c=clientes.find(function(x){return x.id===id;});
+  if(!c) return;
+  editId=id;
+  // Load all abonos including empty ones for editing
+  abonos=[];
+  for (var xi=1;xi<=20;xi++){
+    var m=parseInt(c['abono'+xi+'_monto'])||0;
+    if (m>0) abonos.push({fecha:c['abono'+xi+'_fecha']||'',monto:String(m)});
+  }
+  document.getElementById('mtitle').textContent='Editar · '+c.cliente;
+  document.getElementById('f-emp').value=c.empresa||empActual;
+  document.getElementById('f-fac').value=c.factura||'';
+  document.getElementById('f-cli').value=c.cliente||'';
+  document.getElementById('f-rut').value=c.rut||'';
+  document.getElementById('f-monto').value=c.monto||'';
+  document.getElementById('f-emis').value=(c.fecha_emision||'').substring(0,10);
+  document.getElementById('f-vcto').value=(c.fecha_vencimiento||'').substring(0,10);
+  document.getElementById('f-obs').value=c.observaciones||'';
+  renderAbonos(); updSaldo();
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function addAbono() { abonos.push({fecha:'',monto:''}); renderAbonos(); }
+
+function renderAbonos() {
+  var w=document.getElementById('abonos-wrap');
+  w.innerHTML='';
+  if (!abonos.length) {
+    w.innerHTML='<div style="font-size:12px;color:#aaa;padding:6px 0">Sin abonos. Agrega uno abajo.</div>';
+    return;
+  }
+  abonos.forEach(function(a,i) {
+    var d=document.createElement('div');
+    d.className='abrow';
+    var lbl=document.createElement('span');
+    lbl.className='abnum'; lbl.textContent='Abono '+(i+1);
+    var fi=document.createElement('input');
+    fi.type='date'; fi.className='fctl'; fi.value=a.fecha||'';
+    fi.onchange=(function(idx){return function(){abonos[idx].fecha=this.value;};})(i);
+    var mi=document.createElement('input');
+    mi.type='number'; mi.className='fctl'; mi.value=a.monto||''; mi.placeholder='Monto $';
+    mi.oninput=(function(idx){return function(){abonos[idx].monto=this.value;updSaldo();};})(i);
+    var db=document.createElement('button');
+    db.type='button'; db.textContent='×';
+    db.style.cssText='background:#fee2e2;border:none;border-radius:7px;cursor:pointer;color:#dc2626;font-weight:700;padding:6px 10px;font-size:15px';
+    db.onclick=(function(idx){return function(){abonos.splice(idx,1);renderAbonos();updSaldo();};})(i);
+    d.appendChild(lbl); d.appendChild(fi); d.appendChild(mi); d.appendChild(db);
+    w.appendChild(d);
+  });
+  updSaldo();
+}
+
+function updSaldo() {
+  var m=parseInt(document.getElementById('f-monto').value)||0;
+  var ab=abonos.reduce(function(s,a){return s+(parseInt(a.monto)||0);},0);
+  var sal=m-ab;
+  var el=document.getElementById('saldo-num');
+  el.textContent=fm(sal);
+  el.className='saldo-num '+(sal<=0?'ok':sal<m*0.3?'warn':'');
+}
+
+function save() {
+  var cli=document.getElementById('f-cli').value.trim();
+  var monto=document.getElementById('f-monto').value;
+  var vcto=document.getElementById('f-vcto').value;
+  if(!cli){alert('Ingresa el nombre del cliente');return;}
+  if(!monto){alert('Ingresa el monto');return;}
+  if(!vcto){alert('Ingresa la fecha de vencimiento');return;}
+  var o={
+    empresa:document.getElementById('f-emp').value,
+    id:editId||String(Date.now()),
+    cliente:cli,
+    rut:document.getElementById('f-rut').value.trim(),
+    factura:document.getElementById('f-fac').value.trim(),
+    monto:monto,
+    fecha_emision:document.getElementById('f-emis').value,
+    fecha_vencimiento:vcto,
+    observaciones:document.getElementById('f-obs').value.trim()
+  };
+  abonos.forEach(function(a,i){
+    o['abono'+(i+1)+'_fecha']=a.fecha||'';
+    o['abono'+(i+1)+'_monto']=a.monto||'';
+  });
+  // Clear any extra abono fields beyond current count
+  for (var xi=abonos.length+1;xi<=20;xi++){
+    o['abono'+xi+'_fecha']='';
+    o['abono'+xi+'_monto']='';
+  }
+  o.saldo=String((parseInt(o.monto)||0)-abonos.reduce(function(s,a){return s+(parseInt(a.monto)||0);},0));
+  if(editId){
+    var idx=clientes.findIndex(function(x){return x.id===editId;});
+    if(idx!==-1) clientes[idx]=o;
+  } else {
+    clientes.unshift(o);
+  }
+  saveToSheet(); closeModal(); render(); renderStats();
+}
+</script>
+</body>
+</html>
