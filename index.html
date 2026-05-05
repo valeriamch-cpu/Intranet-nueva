@@ -1717,14 +1717,13 @@ var chatFotoData = null;
 function cargarChat() {
   window.gvizChat = function(resp) {
     try {
-      if (!resp || !resp.table || !resp.table.rows) { chatMensajes = []; renderChat(); return; }
-      var cols = resp.table.cols.map(function(c){ return (c.label||'').toLowerCase(); });
-      chatMensajes = resp.table.rows.filter(function(r){
-        // Skip header row and empty rows
-        return r.c && r.c[0] && r.c[0].v && String(r.c[0].v).toLowerCase() !== 'id';
-      }).map(function(row){
-        return cols.map(function(h,i){ var cell=row.c&&row.c[i]; return cell&&cell.v!==null?String(cell.v):''; });
-      }).map(function(x){ return {id:x[0],usuario:x[1],mensaje:x[2],foto:x[3]||'',hora:x[4]||''}; });
+      if (!resp || !resp.table || !resp.table.rows || !resp.table.rows.length) {
+        chatMensajes = []; renderChat(); return;
+      }
+      // Data stored as JSON in first cell
+      var cell = resp.table.rows[0].c && resp.table.rows[0].c[0];
+      var raw = cell && cell.v ? String(cell.v) : '[]';
+      chatMensajes = JSON.parse(raw);
     } catch(e) { chatMensajes = []; }
     renderChat();
   };
@@ -1779,9 +1778,8 @@ function enviarChat() {
   // Remove foto preview if any
   var prev = document.getElementById('chat-foto-preview');
   if (prev) prev.remove();
-  // Save to sheet
-  var data = chatMensajes.map(function(m){ return [m.id, m.usuario, m.mensaje, m.foto, m.hora]; });
-  postSheet('chat', data);
+  // Save all messages as JSON in single cell - like pizarra
+  postSheet('chat', [[JSON.stringify(chatMensajes)]]);
 }
 
 function chatKeyPress(e) {
