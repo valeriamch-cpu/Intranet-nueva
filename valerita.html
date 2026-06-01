@@ -167,7 +167,13 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#0f0f0f;color:#fff;min-h
   <div class="ftag active" data-marca="" onclick="setMarca(this)">Todas</div>
 </div>
 
-<div id="loading-wrap" style="overflow:hidden;height:2px;margin:0 20px 10px">
+<div style="padding:0 20px 12px;display:flex;align-items:center;gap:8px">
+  <label style="color:var(--text-muted);font-size:12px;white-space:nowrap">📦 Caja:</label>
+  <select id="filtro-caja" onchange="setCaja(this.value)" style="background:var(--card-bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;flex:1;max-width:200px">
+    <option value="">Todas las cajas</option>
+  </select>
+  <span id="caja-badge" style="display:none;background:rgba(230,57,70,.15);color:#e63946;border:1px solid rgba(230,57,70,.3);border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px"></span>
+</div> style="overflow:hidden;height:2px;margin:0 20px 10px">
   <div class="loading-bar" id="loading-bar" style="display:none"></div>
 </div>
 
@@ -285,6 +291,7 @@ var SKU_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ncxF5ihT42rM3hHKnKs
 
 var productos = [];
 var filtroMarca = '';
+var filtroCaja = '';
 var editId = null;
 var moverSku = null;
 var mostrarEliminados = false;
@@ -301,12 +308,13 @@ function load() {
         var map = {'sku':'sku','codigo_barra':'codbarra','codigo':'codbarra','nombre':'nombre','variante':'variante','marca':'marca','rack':'rack','caja':'caja','nota':'nota','notas':'nota','talla':'variante','color':'variante','cantidad':'cantidad','estado':'estado'};
         return map[k] || k;
       });
-      productos = resp.table.rows.filter(function(r){ return r.c && r.c[0] && r.c[0].v; }).map(function(row) {
+      productos = resp.table.rows.filter(function(r){ return r.c && r.c[0] && r.c[0].v; }).map(function(row, rowIdx) {
         var o = {};
         cols.forEach(function(k,i){
           var cell = row.c && row.c[i];
           o[k] = cell && cell.v !== null ? String(cell.v) : '';
         });
+        o._idx = rowIdx;
         return o;
       });
     } catch(e) { productos = []; }
@@ -351,6 +359,14 @@ function renderFilters() {
   // Update datalist
   var dl = document.getElementById('marcas-list');
   dl.innerHTML = marcas.map(function(m){ return '<option value="'+m+'">'; }).join('');
+  // Update caja select
+  var cajas = [...new Set(productos.map(function(p){ return p.caja; }).filter(Boolean))].sort(function(a,b){ return Number(a)-Number(b)||a.localeCompare(b); });
+  var sel = document.getElementById('filtro-caja');
+  sel.innerHTML = '<option value="">Todas las cajas</option>';
+  cajas.forEach(function(cj){
+    sel.innerHTML += '<option value="'+cj+'">Caja '+cj+'</option>';
+  });
+  if (filtroCaja) sel.value = filtroCaja;
 }
 
 function setMarca(el) {
@@ -359,11 +375,24 @@ function setMarca(el) {
   filtroMarca = el.getAttribute('data-marca');
   buscar();
 }
+function setCaja(val) {
+  filtroCaja = val;
+  var badge = document.getElementById('caja-badge');
+  if (val) {
+    badge.textContent = 'Caja ' + val;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+  buscar();
+}
+
 
 function buscar() {
   var q = (document.getElementById('q').value||'').toLowerCase().trim();
   var filtered = productos.filter(function(p){
     if (filtroMarca && p.marca !== filtroMarca) return false;
+    if (filtroCaja && p.caja !== filtroCaja) return false;
     if (!q) return true;
     return (p.sku+' '+p.codbarra+' '+p.nombre+' '+p.variante+' '+p.marca+' '+p.rack+' '+p.caja).toLowerCase().indexOf(q) !== -1;
   });
@@ -399,10 +428,10 @@ function buscar() {
       '</div>';
     // Attach events without inline onclick
     var btns = card.querySelectorAll('.pact');
-    btns[0].addEventListener('click', (function(sku){ return function(e){ e.stopPropagation(); openEdit(sku); }; })(p.sku));
-    btns[1].addEventListener('click', (function(sku){ return function(e){ e.stopPropagation(); openMover(sku); }; })(p.sku));
-    btns[2].addEventListener('click', (function(sku){ return function(e){ e.stopPropagation(); eliminar(sku); }; })(p.sku));
-    card.addEventListener('click', (function(sku){ return function(){ openEdit(sku); }; })(p.sku));
+    btns[0].addEventListener('click', (function(idx){ return function(e){ e.stopPropagation(); openEdit(idx); }; })(p._idx));
+    btns[1].addEventListener('click', (function(idx){ return function(e){ e.stopPropagation(); openMover(idx); }; })(p._idx));
+    btns[2].addEventListener('click', (function(idx){ return function(e){ e.stopPropagation(); eliminar(idx); }; })(p._idx));
+    card.addEventListener('click', (function(idx){ return function(){ openEdit(idx); }; })(p._idx));
     el.appendChild(card);
   });
 }
@@ -416,10 +445,10 @@ function openNew() {
   setTimeout(function(){ document.getElementById('e-sku').focus(); }, 200);
 }
 
-function openEdit(sku) {
-  var p = productos.find(function(x){ return x.sku === sku; });
+function openEdit(idx) {
+  var p = productos.find(function(x){ return x._idx === idx; });
   if (!p) return;
-  editId = sku;
+  editId = idx;
   document.getElementById('edit-title').textContent = 'Editar · ' + (p.nombre||p.sku);
   document.getElementById('e-sku').value      = p.sku||'';
   document.getElementById('e-codbarra').value = p.codbarra||'';
@@ -447,8 +476,8 @@ function guardar() {
     caja:     document.getElementById('e-caja').value.trim(),
     nota:     document.getElementById('e-nota').value.trim(),
   };
-  if (editId) {
-    var idx = productos.findIndex(function(x){ return x.sku === editId; });
+  if (editId !== null) {
+    var idx = productos.findIndex(function(x){ return x._idx === editId; });
     if (idx !== -1) productos[idx] = obj;
     toast('Producto actualizado ✓', 'ok');
   } else {
@@ -461,8 +490,8 @@ function guardar() {
   renderStats(); renderFilters(); buscar();
 }
 
-function eliminar(sku) {
-  var p = productos.find(function(x){ return x.sku === sku; });
+function eliminar(idx) {
+  var p = productos.find(function(x){ return x._idx === idx; });
   if (!p) return;
   if (p.estado === 'ELIMINADO') {
     if (!confirm('\u00bfRestaurar "' + (p.nombre||sku) + '"?')) return;
@@ -478,10 +507,10 @@ function eliminar(sku) {
 }
 
 // ── MOVER ──
-function openMover(sku) {
-  var p = productos.find(function(x){ return x.sku === sku; });
+function openMover(idx) {
+  var p = productos.find(function(x){ return x._idx === idx; });
   if (!p) return;
-  moverSku = sku;
+  moverSku = idx;
   document.getElementById('mover-info').innerHTML =
     '<strong style="color:#fff">' + (p.nombre||sku) + '</strong><br>' +
     'SKU: ' + p.sku + '<br>' +
@@ -520,7 +549,7 @@ function confirmarMover() {
   var rack = document.getElementById('m-rack').value.trim();
   var caja = document.getElementById('m-caja').value.trim();
   if (!rack && !caja) { toast('Ingresa rack o caja destino', 'err'); return; }
-  var p = productos.find(function(x){ return x.sku === moverSku; });
+  var p = productos.find(function(x){ return x._idx === moverSku; });
   if (!p) return;
   var anterior = 'Rack ' + (p.rack||'—') + ' · Caja ' + (p.caja||'—');
   if (rack) p.rack = rack;
