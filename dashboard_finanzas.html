@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Finanzas NBHD 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+.topbar{background:#1a1a2e;padding:0 22px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-logo{color:#fff;font-size:15px;font-weight:700}.topbar-logo span{color:#e63946}
+.bsm{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);border:none;border-radius:7px;padding:7px 13px;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.bblue{background:#457b9d!important}
+.main{padding:20px;max-width:1400px;margin:0 auto}
+.stitle{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.8px;margin:24px 0 10px}
+
+/* FILTROS */
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;background:#fff;padding:14px 16px;border-radius:12px;border:1px solid rgba(0,0,0,.06);align-items:center}
+.filtros label{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px}
+.ftab{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #ddd;background:#f8f8f8;transition:all .15s;white-space:nowrap}
+.ftab.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.ftab:hover:not(.active){background:#eee}
+.sep{width:1px;height:24px;background:#e5e5e5;margin:0 4px}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border-radius:10px;padding:15px 17px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 5px rgba(0,0,0,.05)}
+.klbl{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.kval{font-size:22px;font-weight:800;color:#1a1a2e;letter-spacing:-1px;line-height:1}
+.kval.pos{color:#166534}.kval.neg{color:#991b1b}
+.ksub{font-size:11px;color:#aaa;margin-top:4px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-top:4px}
+.up{background:#dcfce7;color:#166534}.dn{background:#fee2e2;color:#991b1b}.neu{background:#e0f2fe;color:#0369a1}
+
+/* TABLA */
+.card{background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);margin-bottom:12px;overflow:hidden}
+.card-head{padding:14px 18px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:700}
+.card-sub{font-size:11px;color:#aaa}
+.card-body{padding:0;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;padding:8px 12px;border-bottom:2px solid #f0f0f0;text-align:right;white-space:nowrap;background:#fafafa}
+thead th:first-child{text-align:left;min-width:170px}
+tbody tr{border-bottom:1px solid #f5f5f5;transition:background .1s}
+tbody tr:hover{background:#f9f9f9}
+tbody td{padding:9px 12px}
+td.nr{text-align:right;white-space:nowrap;font-feature-settings:"tnum"}
+.row-total td{font-weight:800;background:#f0f4ff;font-size:13px}
+.row-mb td{font-weight:700;background:#f8f8f8}
+.row-hdr td{font-size:10px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:.5px;background:#f4f4f4;padding:8px 12px!important}
+.row-res td{font-weight:800;font-size:13px;border-top:2px solid #eee}
+.pos{color:#166534;font-weight:700}.neg{color:#991b1b;font-weight:700}
+
+/* BARRAS */
+.bar-wrap{padding:16px 18px}
+.bar-row{margin-bottom:12px}
+.bar-lbl{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.bar-lbl span:first-child{font-weight:600;color:#444}
+.bar-track{background:#f0f0f0;border-radius:4px;height:20px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+.b-cc{background:rgba(26,26,46,.85)}
+.b-pa{background:rgba(69,123,157,.85)}
+.b-vt{background:rgba(230,57,70,.75)}
+.b-ws{background:rgba(34,197,94,.8)}
+.b-on{background:rgba(251,146,60,.85)}
+.b-neg{background:rgba(220,38,38,.7)}
+.b-24{background:rgba(150,150,165,.7)}
+.b-25{background:rgba(69,123,157,.8)}
+.b-26{background:rgba(26,26,46,.85)}
+
+/* LEGEND */
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid #f0f0f0}
+.leg{display:flex;align-items:center;gap:6px;font-size:11px;color:#555}
+.ldot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+
+/* TABS VISTA */
+.view-tabs{display:flex;gap:0;margin-bottom:16px;background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,.06);overflow:hidden}
+.vtab{flex:1;padding:11px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;font-family:inherit;color:#888;transition:all .15s;text-align:center;border-right:1px solid #f0f0f0}
+.vtab:last-child{border-right:none}
+.vtab.active{background:#1a1a2e;color:#fff}
+.vtab:hover:not(.active){background:#f5f5f5;color:#1a1a2e}
+.view-panel{display:none}.view-panel.active{display:block}
+
+.drive-bar{background:linear-gradient(135deg,#1a1a2e,#2d3a5a);border-radius:10px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:20px}
+.drive-bar h3{color:#fff;font-size:14px;font-weight:700}
+.drive-bar p{color:rgba(255,255,255,.45);font-size:12px;margin-top:2px}
+.warn{font-size:11px;color:#92400e;background:#fffbeb;padding:10px 14px;border-radius:6px;margin-top:8px}
+@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.grid2,.grid3{grid-template-columns:1fr}.filtros{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-logo">NBHD <span>·</span> Dashboard Finanzas 2026</div>
+  <div style="display:flex;gap:8px">
+    <a href="https://drive.google.com/drive/folders/1-COoCu54kIMru4lehm1cpL29gsivSaGc" target="_blank" class="bsm bblue">&#128193; Drive</a>
+    <button class="bsm" onclick="history.back()">&#8592; Volver</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- FILTROS PRINCIPALES -->
+  <div class="filtros">
+    <label>Vista:</label>
+    <button class="ftab active" onclick="setVista('consolidado',this)">Consolidado</button>
+    <button class="ftab" onclick="setVista('tiendas',this)">Tiendas</button>
+    <button class="ftab" onclick="setVista('canales',this)">Canales</button>
+    <button class="ftab" onclick="setVista('comparativo',this)">2024 · 2025 · 2026</button>
+    <div class="sep"></div>
+    <label>Sucursal:</label>
+    <button class="ftab active" id="s-todas" onclick="setSucursal('todas',this)">Todas</button>
+    <button class="ftab" id="s-cc" onclick="setSucursal('cc',this)">Casa Costanera</button>
+    <button class="ftab" id="s-pa" onclick="setSucursal('pa',this)">Parque Arauco</button>
+    <button class="ftab" id="s-vt" onclick="setSucursal('vt',this)">Vitacura</button>
+    <div class="sep"></div>
+    <label>Mes:</label>
+    <select id="sel-mes" onchange="setMes(this.value)" style="border:1px solid #ddd;border-radius:8px;padding:6px 10px;font-size:12px;background:#f8f8f8;cursor:pointer;font-family:inherit">
+      <option value="acum">Acumulado Ene–Jul</option>
+      <option value="0">Enero</option>
+      <option value="1">Febrero</option>
+      <option value="2">Marzo</option>
+      <option value="3">Abril</option>
+      <option value="4">Mayo</option>
+      <option value="5">Junio</option>
+      <option value="6">Julio</option>
+    </select>
+  </div>
+
+  <!-- KPIs dinámicos -->
+  <div class="kpis" id="kpi-section">
+    <div class="kpi"><div class="klbl">Ventas Netas</div><div class="kval" id="kv-ventas">—</div><div class="ksub" id="ks-ventas">—</div></div>
+    <div class="kpi"><div class="klbl">Margen Bruto</div><div class="kval" id="kv-margen">—</div><div class="ksub" id="ks-margen">—</div></div>
+    <div class="kpi"><div class="klbl">Result. Operacional</div><div class="kval" id="kv-result">—</div><div class="ksub" id="ks-result">—</div></div>
+    <div class="kpi"><div class="klbl">Mejor Mes</div><div class="kval" id="kv-mejor">—</div><div class="ksub" id="ks-mejor">—</div></div>
+    <div class="kpi"><div class="klbl">Margen %</div><div class="kval" id="kv-pct">—</div><div class="ksub" id="ks-pct">—</div></div>
+  </div>
+
+  <!-- VISTA CONSOLIDADO -->
+  <div class="view-panel active" id="panel-consolidado">
+    <div class="stitle" id="title-consol">Estado de Resultados Consolidado · Ene–Jul 2026</div>
+    <div class="card">
+      <div class="card-body">
+        <table id="tbl-consol">
+          <thead><tr><th style="text-align:left">Indicador</th><th>ENE</th><th>FEB</th><th>MAR</th><th>ABR</th><th>MAY</th><th>JUN</th><th>JUL</th><th>ACUM.</th></tr></thead>
+          <tbody id="tbody-consol"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Barras resultado por mes -->
+    <div class="stitle">Resultado Operacional por Mes</div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">Resultado Operacional (M$)</span><span class="card-sub" id="barsub-consol">Consolidado · Ene–Jul 2026</span></div>
+      <div class="bar-wrap" id="bars-consol"></div>
+    </div>
+  </div>
+
+  <!-- VISTA TIENDAS -->
+  <div class="view-panel" id="panel-tiendas">
+    <div class="stitle">Tiendas · Detalle por Sucursal</div>
+    <div class="grid3" id="cards-sucursales"></div>
+
+    <div class="stitle">Comparativo Sucursales · Resultado Operacional por Mes</div>
+    <div class="card">
+      <div class="legend">
+        <div class="leg"><div class="ldot b-cc"></div>Casa Costanera</div>
+        <div class="leg"><div class="ldot b-pa"></div>Parque Arauco</div>
+        <div class="leg"><div class="ldot b-vt"></div>Vitacura</div>
+      </div>
+      <div class="bar-wrap" id="bars-tiendas"></div>
+    </div>
+
+    <div class="stitle">Detalle por Sucursal Seleccionada</div>
+    <div class="card">
+      <div class="card-body">
+        <table><thead><tr><th style="text-align:left">Indicador</th><th>ENE</th><th>FEB</th><th>MAR</th><th>ABR</th><th>MAY</th><th>JUN</th><th>JUL</th><th>ACUM.</th></tr></thead>
+        <tbody id="tbody-tienda-detalle"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISTA CANALES -->
+  <div class="view-panel" id="panel-canales">
+    <div class="stitle">Resultado por Canal · Ene–Jul 2026</div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Wholesale</span><span class="card-sub">Ventas netas y resultado</span></div>
+        <div class="card-body">
+          <table><thead><tr><th style="text-align:left">Mes</th><th>Ventas</th><th>MB</th><th>Result. Op.</th></tr></thead>
+          <tbody id="tbody-ws"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Online · NBHD + Marais</span><span class="card-sub">Ventas netas y resultado</span></div>
+        <div class="card-body">
+          <table><thead><tr><th style="text-align:left">Canal</th><th>Ventas</th><th>MB</th><th>Result. Op.</th></tr></thead>
+          <tbody id="tbody-online"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">No Nacionalizadas</span><span class="card-sub">Por mes · Margen puede ser negativo por costo de nacionalización</span></div>
+      <div class="card-body">
+        <table><thead><tr><th style="text-align:left">Mes</th><th>Ventas</th><th>Costo</th><th>Margen Bruto</th><th>Mg%</th></tr></thead>
+        <tbody id="tbody-nn"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISTA COMPARATIVO -->
+  <div class="view-panel" id="panel-comparativo">
+    <div class="stitle">Comparativo 2024 · 2025 · 2026 · Acumulado Ene–Jul</div>
+    <div class="card">
+      <div class="card-body" style="padding:16px">
+        <table>
+          <thead><tr><th style="text-align:left">Canal</th><th>2024</th><th>2025</th><th>2026</th><th>Var 25→26</th></tr></thead>
+          <tbody id="tbody-cmp-total"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="stitle">Retail · Comparativo por Mes</div>
+    <div class="card">
+      <div class="legend">
+        <div class="leg"><div class="ldot b-24"></div>2024</div>
+        <div class="leg"><div class="ldot b-25"></div>2025</div>
+        <div class="leg"><div class="ldot b-26"></div>2026</div>
+      </div>
+      <div class="bar-wrap" id="bars-cmp-retail"></div>
+    </div>
+
+    <div class="stitle">Wholesale · Comparativo por Mes</div>
+    <div class="card">
+      <div class="legend">
+        <div class="leg"><div class="ldot b-24"></div>2024</div>
+        <div class="leg"><div class="ldot b-25"></div>2025</div>
+        <div class="leg"><div class="ldot b-26"></div>2026</div>
+      </div>
+      <div class="bar-wrap" id="bars-cmp-ws"></div>
+    </div>
+
+    <div class="stitle">No Nacionalizadas · Comparativo por Mes</div>
+    <div class="card">
+      <div class="legend">
+        <div class="leg"><div class="ldot b-24"></div>2024</div>
+        <div class="leg"><div class="ldot b-25"></div>2025</div>
+        <div class="leg"><div class="ldot b-26"></div>2026</div>
+      </div>
+      <div class="bar-wrap" id="bars-cmp-nn"></div>
+    </div>
+  </div>
+
+  <div class="drive-bar">
+    <div><h3>&#128193; Carpeta Finanzas en Drive</h3><p>Reportes, planillas y documentos del área Finanzas</p></div>
+    <a href="https://drive.google.com/drive/folders/1-COoCu54kIMru4lehm1cpL29gsivSaGc" target="_blank" class="bsm bblue" style="padding:10px 18px;font-size:13px">Ir a Drive &#8594;</a>
+  </div>
+</div>
+
+<script>
+// ── DATOS ──────────────────────────────────────────────────
+var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio'];
+var M = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL'];
+
+var D = {
+  cc: {
+    vn:  [108474564,43875218,19968661,20549082,35830821,304784732,15463344],
+    co:  [69358434,27566612,8314059,8968089,13196033,208342778,5547728],
+    mb:  [39116130,16308606,11654602,11580993,22634788,96441954,9915616],
+    ce:  [3514027,4827762,3321873,3197173,3321873,3541158,2590281],
+    ar:  [10263770,14990092,10348838,10204482,10288697,10928780,32978203],
+    ga:  [58765,60000,60000,60000,58765,65295,66000],
+    ro:  [25279568,-3569248,-2076109,-1880662,8965453,81906721,-25718868],
+    mg:  [.36,.37,.58,.56,.63,.32,.64]
+  },
+  pa: {
+    vn:  [46223504,15308034,14418136,12998564,18775513,9819484,11602838],
+    co:  [27412202,8589019,5298518,4652873,6581250,3590055,4018591],
+    mb:  [18811302,6719015,9119618,8345691,12194263,6229429,7584247],
+    ce:  [3383398,3233744,2454688,3122234,2454658,2962125,3588161],
+    ar:  [7476026,7471697,7496169,7482348,7599090,6847669,8369818],
+    ga:  [29796,29780,29843,30046,30232,30458,31000],
+    ro:  [7922082,-4016206,-861082,-2288937,2110283,-3610823,-4404732],
+    mg:  [.41,.44,.63,.64,.65,.63,.65]
+  },
+  vt: {
+    vn:  [99253668,369713,15079559,24503669,16292472,16517461,15423457],
+    co:  [67086590,318603,7204425,10082964,7188832,7343039,4755518],
+    mb:  [32167078,51110,7875134,14420705,9103640,9174422,10667939],
+    ce:  [7307193,8988991,6640572,6301335,6640572,5941729,7546210],
+    ar:  [8951652,8933748,8731378,9511711,9606829,8177110,8193465],
+    ga:  [1670695,1463881,659089,1663400,1707644,1185232,0],
+    ro:  [14237538,-19335510,-8155905,-3055741,-8851405,-6129649,-5071736],
+    mg:  [.32,.14,.52,.59,.56,.56,.69]
+  },
+  ws: {
+    vn:  [386088780,4040501,73693450,101748186,0,160609397,139240301],
+    co:  [231653268,2424301,44216070,61048911,0,96365638,83544181],
+    mb:  [154435512,1616200,29477380,40699274,0,64243759,55696120],
+    ce:  [21736071,30458429,24122554,25440802,25434952,22177427,21604387],
+    ar:  [1920922,2469406,2477074,2310820,2333928,2364269,2368998],
+    ro:  [130778519,-31311635,2877752,12947653,-27768880,39702063,31722736]
+  },
+  nbhd_online: {
+    vn:  [9765075,58062164,3233248,5718588,5835395,4506023,4469116],
+    mb:  [5965717,13927167,2085928,2911837,3268715,2566465,3013607],
+    ro:  [3167920,13142025,-45937,1268504,1502517,1278285,1642748]
+  },
+  marais: {
+    vn:  [4916202,2347462,113950595,1109006,6126233,62121438,1506783],
+    mb:  [2779935,1416660,23746499,671367,3430251,17773672,969656],
+    ro:  [1857156,578643,22252088,-146639,1305413,15977325,-1025754]
+  },
+  nn: {
+    vn:  [318174845,24046632,0,357896541,0,52666691,0],
+    co:  [177284059,12843953,0,415601020,0,27191674,0],
+    mb:  [140890786,11202679,0,-57704479,0,25475017,0],
+    mg:  [.44,.47,null,-.16,null,.48,null]
+  },
+  cmp: {
+    retail: {
+      '2024':[269709668,50667945,181258553,100000342,99612296,237115855,72084913],
+      '2025':[234657554,91572999,90964462,115325268,145375092,100593482,179082549],
+      '2026':[268633013,119962591,166650198,65374720,82463356,396601943,48920142]
+    },
+    ws: {
+      '2024':[268757930,225701494,0,272586161,266163372,141745721,211273690],
+      '2025':[123106404,87250227,620335703,137889194,208625071,18180400,704982553],
+      '2026':[386088780,4040501,73693450,101748186,0,160609397,139240301]
+    },
+    nn: {
+      '2024':[0,0,511914258,0,0,0,245337840],
+      '2025':[0,123189452,157743720,151636445,46756120,283943762,25572768],
+      '2026':[318174845,24046632,0,0,0,0,52666691]
+    }
+  }
+};
+
+// Consolidado = suma tiendas + ws + online + nn
+function consolidado(field) {
+  var arr = [];
+  for(var i=0;i<7;i++) {
+    var cc=D.cc[field]?D.cc[field][i]:0;
+    var pa=D.pa[field]?D.pa[field][i]:0;
+    var vt=D.vt[field]?D.vt[field][i]:0;
+    var ws=D.ws[field]?D.ws[field][i]:0;
+    var no=D.nbhd_online[field]?D.nbhd_online[field][i]:0;
+    var mr=D.marais[field]?D.marais[field][i]:0;
+    var nn=D.nn[field]?D.nn[field][i]:0;
+    arr.push((cc||0)+(pa||0)+(vt||0)+(ws||0)+(no||0)+(mr||0)+(nn||0));
+  }
+  return arr;
+}
+
+// ── ESTADO ──
+var vistaActual = 'consolidado';
+var sucActual = 'todas';
+var mesActual = 'acum';
+
+// ── UTILS ──
+function fmt(v){
+  if(v===null||v===undefined||isNaN(v))return '—';
+  var a=Math.abs(v),s='';
+  if(a>=1e9) s=(a/1e9).toFixed(2)+'B';
+  else if(a>=1e6) s=(a/1e6).toFixed(1)+'M';
+  else if(a>=1e3) s=(a/1e3).toFixed(0)+'K';
+  else s=Math.round(a)+'';
+  return (v<0?'-':'')+'$'+s;
+}
+function fmtPct(v){return v===null||v===undefined?'—':Math.round(v*100)+'%';}
+function sum(arr){return arr.reduce(function(a,b){return a+(b||0);},0);}
+function getVal(arr,mes){return mes==='acum'?sum(arr):arr[parseInt(mes)];}
+function pctColor(v){return v>0?'pos':'neg';}
+function barPct(v,max){return Math.min(100,Math.round(Math.abs(v)/max*100));}
+
+// ── RENDER KPIs ──
+function renderKPIs() {
+  var src, label;
+  if(vistaActual==='tiendas') {
+    if(sucActual==='cc')      { src=D.cc; label='Casa Costanera'; }
+    else if(sucActual==='pa') { src=D.pa; label='Parque Arauco'; }
+    else if(sucActual==='vt') { src=D.vt; label='Vitacura'; }
+    else {
+      // todas tiendas
+      src = {
+        vn: D.cc.vn.map(function(v,i){return v+D.pa.vn[i]+D.vt.vn[i];}),
+        mb: D.cc.mb.map(function(v,i){return v+D.pa.mb[i]+D.vt.mb[i];}),
+        ro: D.cc.ro.map(function(v,i){return v+D.pa.ro[i]+D.vt.ro[i];})
+      };
+      label='Todas las Tiendas';
+    }
+  } else {
+    src = {
+      vn: consolidado('vn'),
+      mb: consolidado('mb'),
+      ro: consolidado('ro')
+    };
+    label='Consolidado';
+  }
+
+  var vn = getVal(src.vn, mesActual);
+  var mb = getVal(src.mb, mesActual);
+  var ro = getVal(src.ro, mesActual);
+  var pct = vn>0?mb/vn:0;
+
+  // mejor mes resultado
+  var roArr = src.ro;
+  var mejIdx = roArr.indexOf(Math.max.apply(null,roArr));
+
+  document.getElementById('kv-ventas').textContent = fmt(vn);
+  document.getElementById('ks-ventas').textContent = label+' · '+(mesActual==='acum'?'Ene–Jul':''+MESES[parseInt(mesActual)]);
+  document.getElementById('kv-margen').textContent = fmt(mb);
+  document.getElementById('ks-margen').innerHTML = '<span class="badge '+(pct>.4?'up':'neu')+'">'+fmtPct(pct)+' s/ventas</span>';
+  document.getElementById('kv-result').className = 'kval '+(ro>=0?'pos':'neg');
+  document.getElementById('kv-result').textContent = fmt(ro);
+  document.getElementById('ks-result').innerHTML = '<span class="badge '+(ro>=0?'up':'dn')+'">'+(ro>=0?'Positivo ↑':'Negativo ↓')+'</span>';
+  document.getElementById('kv-mejor').textContent = MESES[mejIdx];
+  document.getElementById('ks-mejor').textContent = fmt(roArr[mejIdx])+' result. op.';
+  document.getElementById('kv-pct').textContent = fmtPct(pct);
+  document.getElementById('ks-pct').textContent = 'Margen bruto s/ventas';
+}
+
+// ── RENDER CONSOLIDADO ──
+function renderConsolidado() {
+  var vn = consolidado('vn');
+  var co = consolidado('co');
+  var mb = consolidado('mb');
+  var ce = consolidado('ce');
+  var ar = consolidado('ar');
+  var ga = consolidado('ga');
+  var ro = consolidado('ro');
+
+  function row(lbl, arr, cls, colorFn) {
+    var tds = arr.map(function(v,i){
+      var c = colorFn?colorFn(v):'';
+      return '<td class="nr '+(c?c:'')+'">'+(v===null?'—':fmt(v))+'</td>';
+    });
+    return '<tr class="'+(cls||'')+'"><td>'+lbl+'</td>'+tds.join('')+'<td class="nr '+(colorFn?colorFn(sum(arr)):'')+' ">'+(sum(arr)===null?'—':fmt(sum(arr)))+'</td></tr>';
+  }
+
+  document.getElementById('tbody-consol').innerHTML =
+    row('Ventas Netas',vn) +
+    row('Costo Mercaderías',co) +
+    row('Margen Bruto',mb,'row-mb') +
+    row('Costo Empresa',ce) +
+    row('Arriendo',ar) +
+    row('Gastos',ga) +
+    row('Resultado Operacional',ro,'row-res',function(v){return v>=0?'pos':'neg';});
+
+  // Barras resultado
+  var maxAbs = Math.max.apply(null, ro.map(Math.abs));
+  var html = '';
+  ro.forEach(function(v,i){
+    var pct = barPct(v,maxAbs);
+    var isPos = v>=0;
+    html += '<div class="bar-row"><div class="bar-lbl"><span>'+MESES[i]+'</span><span class="'+(isPos?'pos':'neg')+'">'+fmt(v)+'</span></div>';
+    html += '<div class="bar-track"><div class="bar-fill '+(isPos?'b-cc':'b-neg')+'" style="width:'+pct+'%"></div></div></div>';
+  });
+  document.getElementById('bars-consol').innerHTML = html;
+}
+
+// ── RENDER TIENDAS ──
+function renderTiendas() {
+  // Cards resumen sucursales
+  var sucData = [
+    {key:'cc',label:'Casa Costanera',cls:'b-cc'},
+    {key:'pa',label:'Parque Arauco',cls:'b-pa'},
+    {key:'vt',label:'Vitacura',cls:'b-vt'}
+  ];
+  var cardsHtml = sucData.map(function(s){
+    var d = D[s.key];
+    var vn=sum(d.vn), mb=sum(d.mb), ro=sum(d.ro), pct=vn>0?mb/vn:0;
+    var isPos = ro>=0;
+    return '<div class="card" style="border-top:3px solid '+(s.cls==='b-cc'?'#1a1a2e':s.cls==='b-pa'?'#457b9d':'#e63946')+'">'+
+      '<div class="card-head"><span class="card-title">'+s.label+'</span></div>'+
+      '<div style="padding:14px 18px">'+
+        '<div style="font-size:11px;color:#aaa;margin-bottom:3px">Ventas Netas</div>'+
+        '<div style="font-size:22px;font-weight:800;letter-spacing:-1px">'+fmt(vn)+'</div>'+
+        '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+          '<div><div style="font-size:10px;color:#aaa;text-transform:uppercase;font-weight:700">Margen Bruto</div><div style="font-weight:700">'+fmt(mb)+' <span style="color:#aaa;font-size:11px">('+fmtPct(pct)+')</span></div></div>'+
+          '<div><div style="font-size:10px;color:#aaa;text-transform:uppercase;font-weight:700">Result. Op.</div><div class="'+(isPos?'pos':'neg')+'" style="font-weight:800">'+fmt(ro)+'</div></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  document.getElementById('cards-sucursales').innerHTML = cardsHtml;
+
+  // Barras comparativas por mes
+  var maxAbs = 0;
+  ['cc','pa','vt'].forEach(function(k){
+    D[k].ro.forEach(function(v){if(Math.abs(v)>maxAbs) maxAbs=Math.abs(v);});
+  });
+  var colors = {cc:'b-cc',pa:'b-pa',vt:'b-vt'};
+  var labels = {cc:'CC',pa:'PA',vt:'VT'};
+  var html = '';
+  MESES.forEach(function(mes,i){
+    html += '<div class="bar-row"><div class="bar-lbl"><span style="font-weight:700">'+mes+'</span></div>';
+    ['cc','pa','vt'].forEach(function(k){
+      var v = D[k].ro[i];
+      var pct = barPct(v,maxAbs);
+      var isPos = v>=0;
+      html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'+
+        '<span style="width:22px;font-size:10px;color:#888">'+labels[k]+'</span>'+
+        '<div class="bar-track" style="flex:1"><div class="bar-fill '+(isPos?colors[k]:'b-neg')+'" style="width:'+pct+'%">'+fmt(v)+'</div></div>'+
+        '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('bars-tiendas').innerHTML = html;
+
+  // Detalle sucursal seleccionada
+  var sucKey = sucActual==='todas'?'cc':sucActual;
+  var sucLabel = {cc:'Casa Costanera',pa:'Parque Arauco',vt:'Vitacura'};
+  var d = D[sucKey];
+  function rowT(lbl,arr,cls,colorFn){
+    var tds = arr.map(function(v){
+      var c=colorFn?colorFn(v):'';
+      return '<td class="nr '+(c||'')+'">'+(v===null?'—':v===0&&lbl==='Gastos'?'—':fmt(v))+'</td>';
+    });
+    return '<tr class="'+(cls||'')+'"><td>'+lbl+'</td>'+tds.join('')+'<td class="nr '+(colorFn?colorFn(sum(arr)):'')+'">'+(sum(arr)===null?'—':fmt(sum(arr)))+'</td></tr>';
+  }
+  document.getElementById('tbody-tienda-detalle').innerHTML =
+    '<tr class="row-hdr"><td colspan="9">'+sucLabel[sucKey]+'</td></tr>'+
+    rowT('Ventas Netas',d.vn)+
+    rowT('Costo',d.co)+
+    rowT('Margen Bruto',d.mb,'row-mb')+
+    rowT('Costo Empresa',d.ce)+
+    rowT('Arriendo',d.ar)+
+    rowT('Gastos',d.ga)+
+    rowT('Resultado Operacional',d.ro,'row-res',function(v){return v>=0?'pos':'neg';});
+}
+
+// ── RENDER CANALES ──
+function renderCanales() {
+  // Wholesale
+  var wsHtml = MESES.map(function(m,i){
+    var v=D.ws.vn[i], mb=D.ws.mb[i], ro=D.ws.ro[i];
+    return '<tr><td>'+m+'</td><td class="nr">'+fmt(v)+'</td><td class="nr">'+fmt(mb)+'</td><td class="nr '+(ro>=0?'pos':'neg')+'">'+fmt(ro)+'</td></tr>';
+  }).join('');
+  wsHtml += '<tr class="row-total"><td>TOTAL</td><td class="nr">'+fmt(sum(D.ws.vn))+'</td><td class="nr">'+fmt(sum(D.ws.mb))+'</td><td class="nr '+(sum(D.ws.ro)>=0?'pos':'neg')+'">'+fmt(sum(D.ws.ro))+'</td></tr>';
+  document.getElementById('tbody-ws').innerHTML = wsHtml;
+
+  // Online
+  var onRows = [
+    {label:'NBHD Online', d:D.nbhd_online},
+    {label:'Marais Online', d:D.marais}
+  ];
+  var onHtml = onRows.map(function(r){
+    return '<tr><td>'+r.label+'</td><td class="nr">'+fmt(sum(r.d.vn))+'</td><td class="nr">'+fmt(sum(r.d.mb))+'</td><td class="nr '+(sum(r.d.ro)>=0?'pos':'neg')+'">'+fmt(sum(r.d.ro))+'</td></tr>';
+  }).join('');
+  var totOnVn = sum(D.nbhd_online.vn)+sum(D.marais.vn);
+  var totOnRo = sum(D.nbhd_online.ro)+sum(D.marais.ro);
+  onHtml += '<tr class="row-total"><td>TOTAL Online</td><td class="nr">'+fmt(totOnVn)+'</td><td class="nr">—</td><td class="nr '+(totOnRo>=0?'pos':'neg')+'">'+fmt(totOnRo)+'</td></tr>';
+  document.getElementById('tbody-online').innerHTML = onHtml;
+
+  // No Nac
+  var nnHtml = MESES.map(function(m,i){
+    var vn=D.nn.vn[i], co=D.nn.co[i], mb=D.nn.mb[i], mg=D.nn.mg[i];
+    if(!vn) return '<tr><td>'+m+'</td><td class="nr" colspan="4" style="color:#ccc">Sin movimiento</td></tr>';
+    return '<tr><td>'+m+'</td><td class="nr">'+fmt(vn)+'</td><td class="nr">'+fmt(co)+'</td><td class="nr '+(mb>=0?'pos':'neg')+'">'+fmt(mb)+'</td><td class="nr '+(mg>=0?'':'neg')+'">'+fmtPct(mg)+'</td></tr>';
+  }).join('');
+  nnHtml += '<tr class="row-total"><td>TOTAL</td><td class="nr">'+fmt(sum(D.nn.vn))+'</td><td class="nr">'+fmt(sum(D.nn.co))+'</td><td class="nr '+(sum(D.nn.mb)>=0?'pos':'neg')+'">'+fmt(sum(D.nn.mb))+'</td><td class="nr">16%</td></tr>';
+  nnHtml += '<tr><td colspan="5"><div class="warn">⚠️ Abril: costo de nacionalización supera ventas → margen -$57,7M (-16%)</div></td></tr>';
+  document.getElementById('tbody-nn').innerHTML = nnHtml;
+}
+
+// ── RENDER COMPARATIVO ──
+function renderComparativo() {
+  var tipos = ['retail','ws','nn'];
+  var labels = ['Retail','Wholesale','No Nacionales'];
+  var totHtml = '';
+  tipos.forEach(function(t,idx){
+    var d = D.cmp[t];
+    var t24=sum(d['2024']), t25=sum(d['2025']), t26=sum(d['2026']);
+    var varPct = t25>0?(t26-t25)/t25:null;
+    totHtml += '<tr><td>'+labels[idx]+'</td><td class="nr">'+fmt(t24)+'</td><td class="nr">'+fmt(t25)+'</td><td class="nr">'+fmt(t26)+'</td>'+
+      '<td class="nr '+(varPct>=0?'pos':'neg')+'">'+(varPct!==null?(varPct>0?'↑ +':'↓ ')+Math.abs(Math.round(varPct*100))+'%':'—')+'</td></tr>';
+  });
+  var tot24=sum(D.cmp.retail['2024'])+sum(D.cmp.ws['2024'])+sum(D.cmp.nn['2024']);
+  var tot25=sum(D.cmp.retail['2025'])+sum(D.cmp.ws['2025'])+sum(D.cmp.nn['2025']);
+  var tot26=sum(D.cmp.retail['2026'])+sum(D.cmp.ws['2026'])+sum(D.cmp.nn['2026']);
+  var totVar=(tot26-tot25)/tot25;
+  totHtml += '<tr class="row-total"><td>TOTAL</td><td class="nr">'+fmt(tot24)+'</td><td class="nr">'+fmt(tot25)+'</td><td class="nr">'+fmt(tot26)+'</td><td class="nr '+(totVar>=0?'pos':'neg')+'">'+(totVar>0?'↑ +':'↓ ')+Math.abs(Math.round(totVar*100))+'%</td></tr>';
+  document.getElementById('tbody-cmp-total').innerHTML = totHtml;
+
+  // Barras comparativas
+  function renderCmpBars(containerId, tipo) {
+    var d = D.cmp[tipo];
+    var maxVal = 0;
+    ['2024','2025','2026'].forEach(function(y){ d[y].forEach(function(v){if(v>maxVal)maxVal=v;}); });
+    var html = '';
+    MESES.forEach(function(mes,i){
+      html += '<div class="bar-row"><div class="bar-lbl"><span style="font-weight:700">'+mes+'</span></div>';
+      ['2024','2025','2026'].forEach(function(y){
+        var v = d[y][i]||0;
+        var pct = maxVal>0?Math.round(v/maxVal*100):0;
+        var cls = y==='2024'?'b-24':y==='2025'?'b-25':'b-26';
+        html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'+
+          '<span style="width:30px;font-size:10px;color:#888">'+y+'</span>'+
+          '<div class="bar-track" style="flex:1"><div class="bar-fill '+cls+'" style="width:'+pct+'%">'+fmt(v)+'</div></div>'+
+          '</div>';
+      });
+      html += '</div>';
+    });
+    document.getElementById(containerId).innerHTML = html;
+  }
+  renderCmpBars('bars-cmp-retail','retail');
+  renderCmpBars('bars-cmp-ws','ws');
+  renderCmpBars('bars-cmp-nn','nn');
+}
+
+// ── CONTROLES ──
+function setVista(vista, btn) {
+  vistaActual = vista;
+  document.querySelectorAll('.view-panel').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('panel-'+vista).classList.add('active');
+  // Tabs filtros vista
+  document.querySelectorAll('.filtros .ftab').forEach(function(b){
+    if(['consolidado','tiendas','canales','comparativo'].indexOf(b.getAttribute('onclick').match(/'([^']+)'/)[1])!==-1)
+      b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderAll();
+}
+
+function setSucursal(suc, btn) {
+  sucActual = suc;
+  ['s-todas','s-cc','s-pa','s-vt'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderAll();
+}
+
+function setMes(v) {
+  mesActual = v;
+  renderAll();
+}
+
+function renderAll() {
+  renderKPIs();
+  if(vistaActual==='consolidado') renderConsolidado();
+  else if(vistaActual==='tiendas') renderTiendas();
+  else if(vistaActual==='canales') renderCanales();
+  else if(vistaActual==='comparativo') renderComparativo();
+}
+
+// Init
+renderAll();
+</script>
+</body>
+</html>
